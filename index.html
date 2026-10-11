@@ -7,7 +7,10 @@
   <meta name="theme-color" content="#087443">
   <title>WhoYouChoose — Nigeria 2027 Opinion Poll</title>
   <meta name="description" content="Explore an independent online public-opinion poll for Nigeria 2027.">
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
   <style>
     :root {
       --green: #087443;
@@ -16,7 +19,9 @@
       --line: #e2e9e4;
       --bg: #f5f8f5;
     }
+
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       font-family: Arial, Helvetica, sans-serif;
@@ -24,11 +29,13 @@
       background: var(--bg);
       line-height: 1.6;
     }
+
     header {
       background: white;
       border-bottom: 1px solid var(--line);
       padding: 17px 20px;
     }
+
     .nav {
       max-width: 1000px;
       margin: auto;
@@ -37,8 +44,10 @@
       align-items: center;
       gap: 12px;
     }
+
     .brand { font-size: 21px; font-weight: 800; }
     .brand span { color: var(--green); }
+
     .status {
       font-size: 12px;
       color: var(--green);
@@ -46,8 +55,18 @@
       padding: 6px 10px;
       border-radius: 20px;
     }
-    main { max-width: 850px; margin: auto; padding: 30px 16px 50px; }
-    .hero { text-align: center; padding: 30px 10px 25px; }
+
+    main {
+      max-width: 850px;
+      margin: auto;
+      padding: 30px 16px 50px;
+    }
+
+    .hero {
+      text-align: center;
+      padding: 30px 10px 25px;
+    }
+
     .eyebrow {
       color: var(--green);
       font-weight: 700;
@@ -55,8 +74,19 @@
       letter-spacing: 1.5px;
       font-size: 12px;
     }
-    h1 { font-size: clamp(32px, 7vw, 52px); line-height: 1.1; margin: 12px 0; }
-    .hero p { color: var(--muted); max-width: 580px; margin: auto; }
+
+    h1 {
+      font-size: clamp(32px, 7vw, 52px);
+      line-height: 1.1;
+      margin: 12px 0;
+    }
+
+    .hero p {
+      color: var(--muted);
+      max-width: 580px;
+      margin: auto;
+    }
+
     .notice {
       background: #fff8e8;
       border: 1px solid #f0dfb4;
@@ -65,6 +95,7 @@
       font-size: 13px;
       margin: 15px 0 22px;
     }
+
     .panel {
       background: white;
       border: 1px solid var(--line);
@@ -73,9 +104,23 @@
       margin-bottom: 20px;
       box-shadow: 0 5px 20px #10251b08;
     }
-    .panel h2 { margin: 0 0 5px; font-size: 21px; }
-    .sub { color: var(--muted); font-size: 14px; margin: 0 0 17px; }
-    #candidates { display: grid; gap: 10px; }
+
+    .panel h2 {
+      margin: 0 0 5px;
+      font-size: 21px;
+    }
+
+    .sub {
+      color: var(--muted);
+      font-size: 14px;
+      margin: 0 0 17px;
+    }
+
+    #candidates {
+      display: grid;
+      gap: 10px;
+    }
+
     .candidate {
       display: flex;
       align-items: center;
@@ -86,14 +131,30 @@
       cursor: pointer;
       background: white;
     }
+
     .candidate:has(input:checked) {
       border-color: var(--green);
       background: #f0faf4;
     }
-    .candidate input { accent-color: var(--green); width: 18px; height: 18px; }
+
+    .candidate input {
+      accent-color: var(--green);
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
     .candidate-name { font-weight: 700; }
     .party { color: var(--muted); font-size: 13px; }
-    .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+
+    .actions {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
     button, .share {
       border: 0;
       border-radius: 10px;
@@ -103,21 +164,79 @@
       text-decoration: none;
       text-align: center;
     }
-    button { background: var(--green); color: white; cursor: pointer; }
-    button:disabled { background: #a7b6ac; cursor: not-allowed; }
-    .share { background: #e9f5ed; color: var(--green); }
-    #message { margin-top: 13px; font-size: 14px; }
+
+    button {
+      background: var(--green);
+      color: white;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      background: #a7b6ac;
+      cursor: not-allowed;
+    }
+
+    .share {
+      display: inline-block;
+      background: #e9f5ed;
+      color: var(--green);
+    }
+
+    #message {
+      margin-top: 13px;
+      font-size: 14px;
+      overflow-wrap: anywhere;
+    }
+
     .result-row { margin: 15px 0; }
-    .result-top { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; }
-    .bar { height: 8px; background: #edf1ee; border-radius: 10px; overflow: hidden; margin-top: 7px; }
-    .fill { height: 100%; background: var(--green); border-radius: 10px; }
-    #results-note { color: var(--muted); font-size: 13px; }
-    footer { text-align: center; color: var(--muted); font-size: 12px; padding: 20px; }
+
+    .result-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 14px;
+    }
+
+    .result-top span { overflow-wrap: anywhere; }
+
+    .bar {
+      height: 8px;
+      background: #edf1ee;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 7px;
+    }
+
+    .fill {
+      height: 100%;
+      background: var(--green);
+      border-radius: 10px;
+    }
+
+    #results-note {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      padding: 20px;
+    }
+
     @media (min-width: 600px) {
       #candidates { grid-template-columns: 1fr 1fr; }
+
+      .actions {
+        flex-direction: row;
+        align-items: center;
+        flex-wrap: wrap;
+      }
     }
   </style>
 </head>
+
 <body>
 <header>
   <div class="nav">
@@ -130,30 +249,60 @@
   <section class="hero">
     <div class="eyebrow">Nigeria · 2027</div>
     <h1>Your voice.<br>Your choice.</h1>
-    <p>Which candidate would you prefer to lead Nigeria? Explore the candidate list and follow the public-opinion poll results.</p>
+    <p>
+      Which candidate would you prefer to lead Nigeria?
+      Explore the candidate list and follow the public-opinion poll results.
+    </p>
   </section>
 
   <div class="notice">
-    <strong>Important:</strong> WhoYouChoose is an independent, unofficial online opinion poll. It is not affiliated with INEC, is not an official election, and does not represent the views of all Nigerians. Candidate information should be verified against official sources.
+    <strong>Important:</strong> WhoYouChoose is an independent, unofficial
+    online opinion poll. It is not affiliated with INEC, is not an official
+    election, and does not represent the views of all Nigerians. Candidate
+    information should be verified against official sources. This open online
+    poll cannot guarantee one vote per person and should not be treated as a
+    representative survey.
   </div>
 
   <section class="panel">
     <h2>Choose your candidate</h2>
-    <p class="sub">Select one candidate. Vote submission is temporarily paused while protections are being configured.</p>
-    <div id="candidates">Loading candidate list…</div>
-    <div class="actions">
-      <button id="voteBtn" disabled>Voting temporarily paused</button>
-      <a id="shareBtn" class="share" href="#" target="_blank" rel="noopener">Share on WhatsApp</a>
+    <p class="sub">
+      Select one candidate and complete Cloudflare verification before submitting.
+    </p>
+
+    <div id="candidates" aria-live="polite">
+      Loading candidate list…
     </div>
-    <div id="message" role="status"></div>
+
+    <div class="actions">
+      <div
+        class="cf-turnstile"
+        data-sitekey="0x4AAAAAAFTzUgfW1ygfdS-Z"
+        data-theme="auto"
+        data-action="vote"
+      ></div>
+
+      <button id="voteBtn" type="button">Submit my vote</button>
+
+      <a id="shareBtn" class="share" href="#" target="_blank" rel="noopener">
+        Share on WhatsApp
+      </a>
+    </div>
+
+    <div id="message" role="status" aria-live="polite"></div>
   </section>
 
   <section class="panel">
     <h2>Poll results</h2>
     <p class="sub">Current recorded totals from the poll database.</p>
-    <div id="results">Loading results…</div>
-    <p id="results-note">Percentages are calculated from recorded votes only. They are not election predictions.</p>
-    <button id="refreshBtn">Refresh results</button>
+
+    <div id="results" aria-live="polite">Loading results…</div>
+
+    <p id="results-note">
+      Percentages are calculated from recorded votes only. They are not election predictions.
+    </p>
+
+    <button id="refreshBtn" type="button">Refresh results</button>
   </section>
 </main>
 
@@ -162,8 +311,17 @@
 </footer>
 
 <script>
-  const SUPABASE_URL = "https://dhznqadwkfcjqgoqbqyk.supabase.co";
-  const SUPABASE_KEY = "sb_publishable_uDRIn91CPoWtBCDJ-Uh7SQ_3_nLU_lK";
+  "use strict";
+
+  const SUPABASE_URL =
+    "https://dhznqadwkfcjqgoqbqyk.supabase.co";
+
+  const SUPABASE_KEY =
+    "sb_publishable_uDRIn91CPoWtBCDJ-Uh7SQ_3_nLU_l";
+
+  // UPDATED: use the newly deployed secure voting function.
+  const EDGE_FUNCTION_URL =
+    SUPABASE_URL + "/functions/v1/submit-vote-secure";
 
   const client = window.supabase.createClient(
     SUPABASE_URL,
@@ -172,6 +330,11 @@
 
   const candidateBox = document.getElementById("candidates");
   const resultsBox = document.getElementById("results");
+  const voteBtn = document.getElementById("voteBtn");
+  const messageBox = document.getElementById("message");
+  const refreshBtn = document.getElementById("refreshBtn");
+
+  let submittingVote = false;
 
   document.getElementById("shareBtn").href =
     "https://wa.me/?text=" +
@@ -195,7 +358,8 @@
     candidateBox.replaceChildren();
 
     if (!data || data.length === 0) {
-      candidateBox.textContent = "No active candidates are currently listed.";
+      candidateBox.textContent =
+        "No active candidates are currently listed.";
       return;
     }
 
@@ -207,6 +371,7 @@
       radio.type = "radio";
       radio.name = "candidate";
       radio.value = candidate.candidate_name;
+      radio.required = true;
 
       const details = document.createElement("div");
 
@@ -216,7 +381,8 @@
 
       const party = document.createElement("div");
       party.className = "party";
-      party.textContent = candidate.party_code || "Party not listed";
+      party.textContent =
+        candidate.party_code || "Party not listed";
 
       details.append(name, party);
       label.append(radio, details);
@@ -226,68 +392,172 @@
 
   async function loadResults() {
     resultsBox.textContent = "Loading results…";
+    refreshBtn.disabled = true;
 
-    const { data, error } = await client.rpc("get_poll_results");
+    try {
+      const { data, error } = await client.rpc("get_poll_results");
 
-    if (error) {
+      if (error) {
+        throw error;
+      }
+
+      resultsBox.replaceChildren();
+
+      const total = (data || []).reduce(
+        (sum, item) => sum + Number(item.vote_count || 0),
+        0
+      );
+
+      if (!data || data.length === 0) {
+        resultsBox.textContent = "No active candidates are listed yet.";
+        return;
+      }
+
+      data.forEach(item => {
+        const count = Number(item.vote_count || 0);
+        const percent = total ? (count / total) * 100 : 0;
+
+        const row = document.createElement("div");
+        row.className = "result-row";
+
+        const top = document.createElement("div");
+        top.className = "result-top";
+
+        const name = document.createElement("span");
+        name.textContent = item.candidate_name;
+
+        const score = document.createElement("strong");
+        score.textContent =
+          `${count} votes · ${percent.toFixed(1)}%`;
+
+        top.append(name, score);
+
+        const bar = document.createElement("div");
+        bar.className = "bar";
+
+        const fill = document.createElement("div");
+        fill.className = "fill";
+        fill.style.width = `${percent}%`;
+
+        bar.append(fill);
+        row.append(top, bar);
+        resultsBox.append(row);
+      });
+
+      const totalLine = document.createElement("p");
+      totalLine.textContent = `Total recorded votes: ${total}`;
+      resultsBox.append(totalLine);
+
+    } catch (error) {
       resultsBox.textContent =
         "Unable to load results. Please try again.";
       console.error("Results loading error:", error);
-      return;
+
+    } finally {
+      refreshBtn.disabled = false;
     }
-
-    resultsBox.replaceChildren();
-
-    const total = (data || []).reduce(
-      (sum, item) => sum + Number(item.vote_count || 0),
-      0
-    );
-
-    if (!data || data.length === 0) {
-      resultsBox.textContent = "No active candidates are listed yet.";
-      return;
-    }
-
-    data.forEach(item => {
-      const count = Number(item.vote_count || 0);
-      const percent = total ? (count / total) * 100 : 0;
-
-      const row = document.createElement("div");
-      row.className = "result-row";
-
-      const top = document.createElement("div");
-      top.className = "result-top";
-
-      const name = document.createElement("span");
-      name.textContent = item.candidate_name;
-
-      const score = document.createElement("strong");
-      score.textContent = `${count} votes · ${percent.toFixed(1)}%`;
-
-      top.append(name, score);
-
-      const bar = document.createElement("div");
-      bar.className = "bar";
-
-      const fill = document.createElement("div");
-      fill.className = "fill";
-      fill.style.width = `${percent}%`;
-
-      bar.append(fill);
-      row.append(top, bar);
-      resultsBox.append(row);
-    });
-
-    const totalLine = document.createElement("p");
-    totalLine.textContent = `Total recorded votes: ${total}`;
-    resultsBox.append(totalLine);
   }
 
-  document.getElementById("refreshBtn")
-    .addEventListener("click", loadResults);
+  voteBtn.addEventListener("click", async () => {
+    if (submittingVote) return;
+
+    const selected = document.querySelector(
+      'input[name="candidate"]:checked'
+    );
+
+    if (!selected) {
+      messageBox.textContent = "Please choose a candidate first.";
+      return;
+    }
+
+    if (!window.turnstile) {
+      messageBox.textContent =
+        "Cloudflare verification has not loaded. Refresh the page and try again.";
+      return;
+    }
+
+    const tokenInput = document.querySelector(
+      'input[name="cf-turnstile-response"]'
+    );
+
+    const turnstileToken = tokenInput && tokenInput.value;
+
+    if (!turnstileToken) {
+      messageBox.textContent =
+        "Please complete the Cloudflare verification first.";
+      return;
+    }
+
+    submittingVote = true;
+    voteBtn.disabled = true;
+    refreshBtn.disabled = true;
+    voteBtn.textContent = "Submitting…";
+    messageBox.textContent = "Submitting your vote securely…";
+
+    try {
+      const response = await fetch(EDGE_FUNCTION_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": SUPABASE_KEY,
+          "Authorization": "Bearer " + SUPABASE_KEY
+        },
+        body: JSON.stringify({
+          candidate: selected.value,
+          turnstileToken: turnstileToken
+        })
+      });
+
+      let result;
+
+      try {
+        result = await response.json();
+      } catch {
+        throw new Error(
+          "The voting service returned an unexpected response. Please try again."
+        );
+      }
+
+      if (!response.ok || result.success !== true) {
+        throw new Error(
+          result.error ||
+          "Your vote could not be recorded. Please try again."
+        );
+      }
+
+      messageBox.textContent =
+        "Thank you. Your vote has been recorded.";
+
+      document.querySelectorAll(
+        'input[name="candidate"]'
+      ).forEach(input => {
+        input.checked = false;
+      });
+
+      await loadResults();
+
+    } catch (error) {
+      console.error("Voting error:", error);
+      messageBox.textContent =
+        error.message || "Something went wrong. Please try again.";
+
+    } finally {
+      if (window.turnstile) {
+        window.turnstile.reset();
+      }
+
+      submittingVote = false;
+      voteBtn.disabled = false;
+      refreshBtn.disabled = false;
+      voteBtn.textContent = "Submit my vote";
+    }
+  });
+
+  refreshBtn.addEventListener("click", loadResults);
 
   loadCandidates();
   loadResults();
 </script>
 </body>
-</html>
+  </html>
+  
