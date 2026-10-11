@@ -314,14 +314,14 @@
   "use strict";
 
   const SUPABASE_URL =
-    "https://dhznqadwkfcjqgoqbqyk.supabase.co";
+    "https://dhznqadwkfcjqgoqbqyk.supabase.co/functions/v1/submit-vote-secure-v2";
 
   const SUPABASE_KEY =
     "sb_publishable_uDRIn91CPoWtBCDJ-Uh7SQ_3_nLU_lK";
 
   // UPDATED: use the newly deployed secure voting function.
   const EDGE_FUNCTION_URL =
-    SUPABASE_URL + "/functions/v1/submit-vote-secure";
+    SUPABASE_URL + "/functions/v1/submit-vote-secure-v2";
 
   const client = window.supabase.createClient(
     SUPABASE_URL,
