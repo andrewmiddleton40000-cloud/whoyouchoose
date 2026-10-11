@@ -1,0 +1,162 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="WhoYouChoose is an independent, unofficial public opinion poll about Nigeria's 2027 presidential race.">
+  <title>WhoYouChoose — Your Voice, Your Choice</title>
+  <style>
+    :root {
+      --green: #087f5b;
+      --dark: #101b18;
+      --muted: #68736e;
+      --paper: #f5f7f4;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--paper);
+      color: var(--dark);
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 6%;
+      background: white;
+      border-bottom: 1px solid #e5e9e5;
+    }
+    .logo { font-size: 21px; font-weight: 900; letter-spacing: -1px; }
+    .logo span { color: var(--green); }
+    .tag {
+      font-size: 11px;
+      font-weight: bold;
+      border: 1px solid #dce6df;
+      padding: 8px 10px;
+      border-radius: 30px;
+    }
+    main { max-width: 900px; margin: auto; padding: 52px 20px; }
+    .eyebrow {
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    h1 {
+      font-size: clamp(40px, 8vw, 76px);
+      line-height: .98;
+      letter-spacing: -4px;
+      margin: 18px 0;
+    }
+    h1 span { color: var(--green); }
+    .intro { max-width: 610px; font-size: 17px; line-height: 1.7; color: var(--muted); }
+    .notice {
+      margin-top: 26px;
+      background: #e8f3ed;
+      border-left: 4px solid var(--green);
+      padding: 15px 17px;
+      border-radius: 4px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .panel {
+      background: white;
+      margin-top: 35px;
+      padding: 25px;
+      border: 1px solid #e4e9e4;
+      border-radius: 18px;
+      box-shadow: 0 10px 35px #10251a08;
+    }
+    .panel h2 { margin-top: 0; font-size: 23px; }
+    .panel p { color: var(--muted); line-height: 1.6; }
+    .status {
+      display: inline-block;
+      padding: 9px 12px;
+      border-radius: 8px;
+      background: #f0f2ef;
+      font-size: 13px;
+      font-weight: bold;
+    }
+    .share {
+      display: inline-block;
+      margin-top: 18px;
+      background: var(--green);
+      color: white;
+      text-decoration: none;
+      padding: 14px 19px;
+      border-radius: 9px;
+      font-weight: bold;
+    }
+    footer {
+      padding: 25px 6%;
+      text-align: center;
+      font-size: 12px;
+      line-height: 1.8;
+      color: var(--muted);
+    }
+    footer a { color: var(--green); }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">WhoYouChoose<span>.</span></div>
+    <div class="tag">INDEPENDENT POLL</div>
+  </header>
+
+  <main>
+    <div class="eyebrow">Nigeria · 2027</div>
+    <h1>Your voice.<br>Your <span>choice.</span></h1>
+    <p class="intro">
+      Join the conversation about Nigeria's next presidential election.
+      Explore public opinion, share your views and see how other visitors respond.
+    </p>
+
+    <div class="notice">
+      <strong>Important:</strong> WhoYouChoose is an independent,
+      unofficial public-opinion project. It is not affiliated with INEC,
+      does not conduct an official election and does not predict or determine
+      the election outcome.
+    </div>
+
+    <section class="panel">
+      <h2>The presidential popularity poll</h2>
+      <p>
+        We're preparing the voting experience. Candidate information and
+        voting will be published after the poll rules and voting system
+        have been configured.
+      </p>
+      <span class="status">Voting is not open yet</span>
+      <br>
+      <a class="share" id="shareLink" href="https://wa.me/?text=Discover%20WhoYouChoose%2C%20an%20unofficial%20Nigerian%20public-opinion%20poll.">
+        Share WhoYouChoose
+      </a>
+    </section>
+
+    <section class="panel">
+      <h2>About this project</h2>
+      <p>
+        Our aim is to provide an accessible place for people to participate
+        in clearly labelled online public-opinion polls. Results will reflect
+        responses received through this website, not necessarily the views
+        of the Nigerian population as a whole.
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    WhoYouChoose · Independent public-opinion project<br>
+    Not affiliated with INEC or any political party.<br>
+    <a href="mailto:hello@whoyouchoose.example">Contact the site owner</a>
+    · <a href="#privacy">Privacy</a>
+  </footer>
+
+  <script>
+    document.getElementById("shareLink").href =
+      "https://wa.me/?text=" +
+      encodeURIComponent("Explore WhoYouChoose, an unofficial Nigerian public-opinion poll: " + window.location.href);
+  </script>
+</body>
+</html>
