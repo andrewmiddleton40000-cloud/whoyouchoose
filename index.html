@@ -3,873 +3,736 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#008751">
-
-  <title>WhoYouChoose 🇳🇬 — Nigeria 2027 Opinion Poll</title>
-  <meta name="description" content="Explore an independent online public-opinion poll about Nigeria's 2027 presidential election. Cast your opinion and view the results.">
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#073b2a">
+  <title>WhoYouChoose | Nigeria Decides 2027</title>
+  <meta name="description" content="An unofficial public opinion poll for Nigeria's 2027 presidential election. Explore candidates and see poll results.">
+  
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 
   <style>
     :root {
-      --green: #008751;
-      --green-dark: #006b40;
-      --green-light: #e9f7ef;
-      --navy: #152238;
-      --text: #243329;
-      --muted: #68776d;
-      --line: #e1e9e3;
-      --bg: #f4f8f5;
+      --green: #087443;
+      --deep-green: #073b2a;
+      --light-green: #e9f6ee;
+      --navy: #102b46;
       --white: #ffffff;
-      --gold: #e9b949;
-      --shadow: 0 8px 28px rgba(21, 34, 56, .06);
+      --background: #f5f8f6;
+      --text: #17251e;
+      --muted: #66756c;
+      --border: #dce7df;
+      --danger: #b42318;
+      --shadow: 0 8px 26px rgba(7, 59, 42, .07);
     }
 
-    * {
-      box-sizing: border-box;
-    }
-
-    html {
-      scroll-behavior: smooth;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
+      background: var(--background);
       color: var(--text);
-      background: var(--bg);
-      line-height: 1.6;
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.55;
     }
 
-    button, input {
-      font: inherit;
+    button, input { font: inherit; }
+
+    button:focus-visible, a:focus-visible {
+      outline: 3px solid #e5b93f;
+      outline-offset: 3px;
     }
 
-    button {
-      cursor: pointer;
-    }
-
-    button:disabled {
-      cursor: not-allowed;
-      opacity: .6;
-    }
-
-    header {
-      background: var(--white);
-      border-bottom: 1px solid var(--line);
-      position: sticky;
-      top: 0;
-      z-index: 10;
+    .topbar {
+      background: var(--deep-green);
+      color: white;
+      padding: 14px 18px;
     }
 
     .nav {
-      max-width: 1100px;
+      max-width: 1120px;
       margin: auto;
-      padding: 14px 18px;
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      gap: 12px;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
     }
 
     .brand {
       display: flex;
       align-items: center;
-      gap: 9px;
-      color: var(--navy);
+      gap: 10px;
       font-size: 21px;
       font-weight: 800;
-      text-decoration: none;
-      white-space: nowrap;
+      letter-spacing: -.5px;
     }
 
-    .brand-name span {
-      color: var(--green);
-    }
-
-    .nigeria-flag {
+    .flag {
+      width: 36px;
+      height: 24px;
       display: inline-flex;
-      width: 30px;
-      height: 20px;
-      border: 1px solid #dce5dd;
-      border-radius: 3px;
       overflow: hidden;
+      border-radius: 3px;
+      border: 1px solid rgba(255,255,255,.4);
       flex-shrink: 0;
     }
 
-    .nigeria-flag span {
-      flex: 1;
-    }
+    .flag span { flex: 1; }
+    .flag .green { background: #008751; }
+    .flag .white { background: #fff; }
 
-    .flag-green {
-      background: #008751;
-    }
-
-    .flag-white {
-      background: #fff;
-    }
-
-    .status {
-      font-size: 11px;
+    .nav-link {
+      color: #fff;
+      text-decoration: none;
+      font-size: 14px;
       font-weight: 700;
-      color: var(--green-dark);
-      background: var(--green-light);
-      padding: 6px 10px;
-      border-radius: 30px;
-      white-space: nowrap;
-    }
-
-    main {
-      max-width: 1000px;
-      margin: auto;
-      padding: 24px 16px 50px;
     }
 
     .hero {
-      position: relative;
-      overflow: hidden;
+      background: linear-gradient(135deg, #073b2a, #0b6543 65%, #102b46);
+      color: white;
+      padding: 54px 20px 48px;
       text-align: center;
-      padding: 48px 20px 42px;
-      border-radius: 24px;
-      background: linear-gradient(140deg, #e5f5e9 0%, #ffffff 56%, #edf3ff 100%);
-      border: 1px solid #dcebe0;
-      margin-bottom: 22px;
     }
 
-    .hero::before {
-      content: "";
-      position: absolute;
-      width: 180px;
-      height: 180px;
-      border: 25px solid rgba(0, 135, 81, .06);
-      border-radius: 50%;
-      top: -90px;
-      right: -55px;
-    }
-
-    .hero::after {
-      content: "";
-      position: absolute;
-      width: 120px;
-      height: 120px;
-      background: rgba(0, 135, 81, .05);
-      border-radius: 50%;
-      bottom: -70px;
-      left: -35px;
-    }
-
-    .hero-content {
-      position: relative;
-      z-index: 1;
+    .hero-inner {
+      max-width: 800px;
+      margin: auto;
     }
 
     .eyebrow {
       display: inline-block;
-      color: var(--green-dark);
-      font-size: 11px;
+      padding: 6px 12px;
+      border: 1px solid rgba(255,255,255,.35);
+      border-radius: 50px;
+      font-size: 12px;
       font-weight: 800;
-      letter-spacing: 1.6px;
+      letter-spacing: 1px;
       text-transform: uppercase;
-      background: #fff;
-      border: 1px solid #d8eade;
-      padding: 7px 12px;
-      border-radius: 30px;
     }
 
     h1 {
-      color: var(--navy);
-      font-size: clamp(34px, 7vw, 58px);
+      font-size: clamp(32px, 7vw, 55px);
       line-height: 1.08;
-      letter-spacing: -1.5px;
-      margin: 18px 0 14px;
-    }
-
-    h1 .highlight {
-      color: var(--green);
+      margin: 20px 0 15px;
+      letter-spacing: -1.6px;
     }
 
     .hero p {
-      max-width: 600px;
-      margin: auto;
-      color: var(--muted);
+      max-width: 620px;
+      margin: 0 auto;
+      color: #e5f1e9;
       font-size: 16px;
     }
 
     .hero-actions {
       display: flex;
       justify-content: center;
+      gap: 12px;
       flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 24px;
+      margin-top: 25px;
     }
 
-    .btn {
-      display: inline-flex;
-      justify-content: center;
-      align-items: center;
-      gap: 8px;
+    .button {
       border: 0;
-      border-radius: 11px;
-      padding: 12px 18px;
-      font-size: 14px;
-      font-weight: 700;
+      border-radius: 9px;
+      padding: 12px 19px;
+      font-weight: 800;
+      cursor: pointer;
       text-decoration: none;
-      transition: transform .15s, background .15s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: transform .15s, opacity .15s;
     }
 
-    .btn:hover {
-      transform: translateY(-1px);
+    .button:active { transform: scale(.98); }
+    .button:disabled { opacity: .55; cursor: not-allowed; }
+
+    .button-white {
+      color: var(--deep-green);
+      background: white;
     }
 
-    .btn-primary {
+    .button-green {
       color: white;
       background: var(--green);
     }
 
-    .btn-primary:hover {
-      background: var(--green-dark);
+    .button-outline {
+      color: var(--deep-green);
+      background: white;
+      border: 1px solid var(--border);
     }
 
-    .btn-secondary {
-      color: var(--navy);
-      background: white;
-      border: 1px solid var(--line);
+    .notice-wrap {
+      max-width: 1000px;
+      margin: 20px auto 0;
+      padding: 0 16px;
     }
 
     .notice {
-      background: #fff9e9;
-      border: 1px solid #efdfb4;
-      color: #695322;
-      padding: 14px 16px;
-      border-radius: 13px;
-      font-size: 12px;
-      margin: 18px 0 24px;
+      background: #fff9e8;
+      color: #634b13;
+      border: 1px solid #f0dfaa;
+      border-radius: 10px;
+      padding: 13px 15px;
+      font-size: 13px;
     }
 
-    .notice strong {
-      color: #4d3b13;
+    main {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 30px 16px 55px;
     }
+
+    .section { margin-top: 32px; }
+    .section:first-child { margin-top: 0; }
 
     .section-heading {
       display: flex;
       justify-content: space-between;
       align-items: end;
       gap: 12px;
-      margin: 28px 0 15px;
+      flex-wrap: wrap;
+      margin-bottom: 17px;
     }
 
-    .section-heading h2 {
-      color: var(--navy);
-      font-size: 23px;
-      line-height: 1.25;
+    h2 {
+      color: var(--deep-green);
+      font-size: clamp(23px, 4vw, 30px);
+      line-height: 1.2;
+      margin: 0 0 6px;
+    }
+
+    .subheading {
       margin: 0;
+      color: var(--muted);
+      font-size: 14px;
     }
 
-    .section-heading p {
+    .status {
       color: var(--muted);
       font-size: 13px;
-      margin: 5px 0 0;
-    }
-
-    .count-label {
-      font-size: 12px;
-      color: var(--muted);
-      white-space: nowrap;
-    }
-
-    .panel {
-      background: white;
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: var(--shadow);
     }
 
     .candidate-grid {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 15px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 17px;
     }
 
     .candidate-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
       display: flex;
       flex-direction: column;
       min-width: 0;
-      overflow: hidden;
-      background: white;
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      transition: border-color .18s, box-shadow .18s;
     }
 
     .candidate-card.selected {
       border: 2px solid var(--green);
-      box-shadow: 0 0 0 3px rgba(0, 135, 81, .08);
+      box-shadow: 0 0 0 3px rgba(8,116,67,.1);
     }
 
-    .candidate-photo-wrap {
+    .photo-wrap {
+      height: 205px;
       position: relative;
-      height: 190px;
-      background: linear-gradient(145deg, #e5f4e9, #edf1f7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
       overflow: hidden;
+      background: linear-gradient(135deg, #e8f3eb, #e7edf4);
     }
 
     .candidate-photo {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      object-position: center top;
       display: block;
     }
 
     .photo-placeholder {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--green-dark);
-      font-size: 48px;
+      font-size: 58px;
       font-weight: 800;
-      background: linear-gradient(145deg, #e5f4e9, #edf1f7);
+      color: #6c9180;
     }
 
-    .candidate-info {
-      padding: 13px;
+    .party-label {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      background: rgba(7,59,42,.93);
+      color: white;
+      border-radius: 6px;
+      padding: 5px 9px;
+      font-size: 11px;
+      font-weight: 800;
+      max-width: calc(100% - 20px);
+      overflow-wrap: anywhere;
+    }
+
+    .candidate-body {
+      padding: 15px;
       display: flex;
       flex-direction: column;
       flex: 1;
     }
 
-    .candidate-info h3 {
-      color: var(--navy);
-      font-size: 15px;
+    .candidate-name {
+      font-size: 17px;
+      font-weight: 800;
       line-height: 1.35;
       margin: 0 0 5px;
-      overflow-wrap: anywhere;
     }
 
-    .party {
-      font-size: 12px;
-      color: var(--muted);
-      margin-bottom: 13px;
-      overflow-wrap: anywhere;
-    }
-
-    .vote-choice {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: auto;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .vote-choice input {
-      accent-color: var(--green);
-      width: 17px;
-      height: 17px;
-      flex-shrink: 0;
-    }
-
-    .vote-panel h2,
-    .results-panel h2 {
-      color: var(--navy);
-      margin: 0 0 6px;
-      font-size: 21px;
-    }
-
-    .subtext {
+    .candidate-party {
       color: var(--muted);
       font-size: 13px;
-      margin: 0 0 17px;
-    }
-
-    .selected-candidate {
-      padding: 12px 14px;
-      background: var(--green-light);
-      border: 1px solid #cfe8d7;
-      border-radius: 11px;
-      margin: 15px 0;
-      font-size: 13px;
-    }
-
-    .selected-candidate strong {
-      color: var(--green-dark);
-    }
-
-    .turnstile-area {
-      margin: 17px 0;
-      overflow: hidden;
-    }
-
-    .vote-message {
-      font-size: 13px;
-      padding: 11px 13px;
-      border-radius: 10px;
-      margin-top: 13px;
+      margin: 0 0 13px;
       overflow-wrap: anywhere;
     }
 
-    .vote-message:empty {
-      display: none;
+    .select-button { margin-top: auto; width: 100%; }
+
+    .selected-note {
+      font-size: 13px;
+      color: var(--green);
+      font-weight: 800;
+      margin: 10px 0 0;
     }
 
-    .vote-message.error {
-      background: #fff0f0;
-      color: #9d2222;
-      border: 1px solid #f1cccc;
-    }
-
-    .vote-message.success {
-      background: #eaf8ef;
-      color: #176b3c;
-      border: 1px solid #cbe9d4;
-    }
-
-    .vote-message.info {
-      background: #eef4ff;
-      color: #244b85;
-      border: 1px solid #d7e4fb;
+    .results-panel {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: var(--shadow);
     }
 
     .results-summary {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
       gap: 12px;
-      margin: 16px 0 22px;
+      margin-bottom: 20px;
     }
 
-    .summary-box {
-      padding: 15px;
-      background: #f5f8f6;
-      border: 1px solid var(--line);
-      border-radius: 13px;
+    .stat {
+      background: #f0f7f2;
+      border-radius: 10px;
+      padding: 14px;
     }
 
-    .summary-box span {
-      display: block;
+    .stat-label {
       color: var(--muted);
       font-size: 12px;
+      font-weight: 700;
     }
 
-    .summary-box strong {
-      display: block;
-      color: var(--navy);
-      font-size: 27px;
+    .stat-value {
+      color: var(--deep-green);
+      font-size: 25px;
+      font-weight: 800;
       margin-top: 3px;
+      overflow-wrap: anywhere;
     }
 
     .result-row {
-      margin: 16px 0;
+      padding: 15px 0;
+      border-top: 1px solid #edf1ed;
     }
 
     .result-top {
       display: flex;
+      align-items: start;
       justify-content: space-between;
-      gap: 10px;
-      margin-bottom: 7px;
-      font-size: 13px;
+      gap: 12px;
+      margin-bottom: 8px;
     }
 
     .result-name {
-      color: var(--navy);
-      font-weight: 700;
+      font-size: 14px;
+      font-weight: 800;
       overflow-wrap: anywhere;
     }
 
-    .result-number {
-      color: var(--green-dark);
+    .result-votes {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 3px;
+    }
+
+    .result-percent {
+      font-size: 16px;
       font-weight: 800;
+      color: var(--deep-green);
       white-space: nowrap;
     }
 
-    .bar-track {
+    .progress-track {
       height: 10px;
-      border-radius: 20px;
-      background: #e9efeb;
+      background: #e9efea;
+      border-radius: 99px;
       overflow: hidden;
     }
 
-    .bar-fill {
+    .progress-fill {
       height: 100%;
-      border-radius: 20px;
-      background: linear-gradient(90deg, #008751, #36ad70);
+      width: 0;
+      background: linear-gradient(90deg, #087443, #17a667);
+      border-radius: 99px;
       transition: width .4s ease;
     }
 
-    .empty-state {
-      text-align: center;
-      padding: 24px 10px;
+    .vote-panel {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      padding: 22px;
+      box-shadow: var(--shadow);
+    }
+
+    .selected-candidate-box {
+      border-radius: 10px;
+      background: var(--light-green);
+      padding: 14px;
+      margin: 16px 0;
+      font-weight: 700;
+      color: var(--deep-green);
+      overflow-wrap: anywhere;
+    }
+
+    .turnstile-wrap {
+      margin: 16px 0;
+      min-height: 65px;
+      overflow-x: auto;
+    }
+
+    .help-text {
       color: var(--muted);
-      font-size: 13px;
+      font-size: 12px;
+      margin: 12px 0 0;
     }
 
-    .share-panel {
+    .message {
+      display: none;
+      padding: 12px 14px;
+      border-radius: 9px;
+      margin: 14px 0;
+      font-size: 14px;
+      overflow-wrap: anywhere;
+    }
+
+    .message.show { display: block; }
+    .message.error { background: #fff0ef; color: var(--danger); border: 1px solid #f4c7c3; }
+    .message.success { background: #e9f8ef; color: #126239; border: 1px solid #b9e4c9; }
+    .message.info { background: #edf4ff; color: #214f88; border: 1px solid #c9ddfb; }
+
+    .empty-state {
+      background: white;
+      border: 1px dashed #cbd9cf;
+      color: var(--muted);
+      border-radius: 12px;
+      padding: 22px;
       text-align: center;
-      background: var(--navy);
-      color: white;
-      border-radius: 18px;
-      padding: 24px 18px;
-      margin: 24px 0;
-    }
-
-    .share-panel h2 {
-      margin: 0 0 7px;
-      font-size: 21px;
-    }
-
-    .share-panel p {
-      color: #d0d9e7;
-      font-size: 13px;
-      margin: 0 0 16px;
-    }
-
-    .share-panel .btn {
-      background: #25d366;
-      color: #073b22;
+      font-size: 14px;
     }
 
     footer {
+      background: #082f23;
+      color: #e1eee5;
+      padding: 25px 16px;
       text-align: center;
-      padding: 22px 16px 30px;
-      border-top: 1px solid var(--line);
-      background: white;
-      color: var(--muted);
       font-size: 12px;
     }
 
-    footer strong {
-      color: var(--green-dark);
+    footer p { max-width: 800px; margin: 7px auto; }
+
+    .footer-brand {
+      color: white;
+      font-weight: 800;
+      font-size: 17px;
     }
 
-    .footer-links {
-      display: flex;
-      justify-content: center;
-      gap: 16px;
-      flex-wrap: wrap;
-      margin-bottom: 10px;
+    .loading {
+      padding: 22px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
     }
 
-    .footer-links a {
-      color: var(--green-dark);
-      text-decoration: none;
+    @media (max-width: 520px) {
+      .hero { padding: 40px 17px; }
+      .brand { font-size: 19px; }
+      .photo-wrap { height: 220px; }
+      .candidate-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+      .candidate-body { padding: 11px; }
+      .candidate-name { font-size: 15px; }
+      .candidate-party { font-size: 12px; }
+      .photo-wrap { height: 165px; }
+      .button { padding: 11px 13px; }
+      .select-button { font-size: 12px; }
+      .results-panel, .vote-panel { padding: 15px; }
     }
 
-    @media (max-width: 700px) {
-      .candidate-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 11px;
-      }
-
-      .candidate-photo-wrap {
-        height: 170px;
-      }
-
-      .hero {
-        padding: 36px 15px;
-      }
-
-      .panel {
-        padding: 15px;
-      }
-
-      .section-heading h2 {
-        font-size: 20px;
-      }
-    }
-
-    @media (max-width: 380px) {
-      .brand {
-        font-size: 17px;
-        gap: 6px;
-      }
-
-      .nigeria-flag {
-        width: 25px;
-        height: 17px;
-      }
-
-      .status {
-        font-size: 10px;
-        padding: 5px 7px;
-      }
-
-      .candidate-photo-wrap {
-        height: 145px;
-      }
-
-      .candidate-info {
-        padding: 10px;
-      }
-
-      .candidate-info h3 {
-        font-size: 13px;
-      }
-
-      .party {
-        font-size: 11px;
-      }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      html {
-        scroll-behavior: auto;
-      }
-
-      *, *::before, *::after {
-        transition: none !important;
-      }
+    @media (max-width: 350px) {
+      .candidate-grid { grid-template-columns: 1fr; }
+      .photo-wrap { height: 230px; }
     }
   </style>
 </head>
 
 <body>
-  <header>
-    <nav class="nav" aria-label="Main navigation">
-      <a class="brand" href="#" aria-label="WhoYouChoose home">
-        <span class="nigeria-flag" aria-label="Nigerian flag">
-          <span class="flag-green"></span>
-          <span class="flag-white"></span>
-          <span class="flag-green"></span>
+  <header class="topbar">
+    <div class="nav">
+      <div class="brand">
+        <span class="flag" aria-label="Nigerian flag">
+          <span class="green"></span><span class="white"></span><span class="green"></span>
         </span>
-        <span class="brand-name">WhoYou<span>Choose</span></span>
-      </a>
-      <span class="status">🇳🇬 2027 Opinion Poll</span>
-    </nav>
+        <span>WhoYouChoose</span>
+      </div>
+      <a class="nav-link" href="#results">View Results ↓</a>
+    </div>
   </header>
 
+  <section class="hero">
+    <div class="hero-inner">
+      <span class="eyebrow">Nigeria · 2027</span>
+      <h1>Your Voice.<br>Nigeria's Future.</h1>
+      <p>
+        Which candidate would you choose for Nigeria's next president?
+        Explore the candidates, cast your opinion, and follow the public poll results.
+      </p>
+      <div class="hero-actions">
+        <a href="#candidates" class="button button-white">Choose a Candidate</a>
+        <a href="#results" class="button button-outline">See Poll Results</a>
+      </div>
+    </div>
+  </section>
+
+  <div class="notice-wrap">
+    <div class="notice">
+      <strong>Important:</strong> WhoYouChoose is an independent, unofficial public opinion poll.
+      It is not affiliated with INEC or any political party and is not an official election result.
+      Online voting cannot guarantee one vote per person.
+    </div>
+  </div>
+
   <main>
-    <section class="hero">
-      <div class="hero-content">
-        <span class="eyebrow">Nigeria • Presidential Opinion Poll</span>
-        <h1>Your voice.<br><span class="highlight">Your choice.</span></h1>
-        <p>
-          Explore the candidates, select the person you support,
-          cast your opinion, and see how the poll results change.
-        </p>
-        <div class="hero-actions">
-          <a class="btn btn-primary" href="#candidates">Choose a Candidate ↓</a>
-          <a class="btn btn-secondary" href="#results">View Results</a>
+    <section class="section" id="candidates">
+      <div class="section-heading">
+        <div>
+          <h2>Meet the Candidates</h2>
+          <p class="subheading">Select the candidate you would choose.</p>
         </div>
+        <span class="status" id="candidate-count">Loading candidates…</span>
+      </div>
+
+      <div id="candidate-message" class="message" role="status"></div>
+      <div id="candidate-grid" class="candidate-grid">
+        <div class="loading">Loading candidates…</div>
       </div>
     </section>
 
-    <div class="notice">
-      <strong>Important notice:</strong>
-      WhoYouChoose is an independent, unofficial online opinion poll.
-      It is not affiliated with or endorsed by INEC or any political party.
-      Online poll results may not represent the views of Nigeria's population.
-      The site cannot guarantee one vote per person, and these results are
-      not official election results.
-    </div>
-
-    <section id="candidates">
+    <section class="section" id="vote">
       <div class="section-heading">
         <div>
-          <h2>Choose your candidate</h2>
-          <p>Select one candidate before submitting your vote.</p>
+          <h2>Cast Your Opinion</h2>
+          <p class="subheading">Choose a candidate and complete the security check.</p>
         </div>
-        <span class="count-label" id="candidate-count">Loading candidates…</span>
       </div>
 
-      <div id="candidate-grid" class="candidate-grid" aria-live="polite">
-        <div class="panel empty-state">Loading candidates…</div>
-      </div>
-
-      <div class="panel vote-panel" style="margin-top:20px">
-        <h2>Cast your vote</h2>
-        <p class="subtext">
-          Confirm your selection and complete the security check below.
+      <div class="vote-panel">
+        <p style="margin-top:0">
+          Your selection:
         </p>
 
-        <div id="selected-candidate" class="selected-candidate">
+        <div id="selected-candidate" class="selected-candidate-box">
           No candidate selected yet.
         </div>
 
-        <div class="turnstile-area">
+        <div id="vote-message" class="message" role="status" aria-live="polite"></div>
+
+        <div class="turnstile-wrap">
           <div
             class="cf-turnstile"
             data-sitekey="0x4AAAAAAFTzUgfW1ygfdS-Z"
-            data-theme="light"
             data-callback="onTurnstileSuccess"
             data-expired-callback="onTurnstileExpired"
-            data-error-callback="onTurnstileError">
+            data-error-callback="onTurnstileError"
+            data-theme="light">
           </div>
         </div>
 
-        <button id="submit-vote" class="btn btn-primary" type="button" disabled>
-          Submit my vote
+        <button id="submit-vote" class="button button-green" type="button" disabled>
+          Submit My Vote
         </button>
 
-        <div id="vote-message" class="vote-message" role="status" aria-live="polite"></div>
+        <p class="help-text">
+          Please submit only your own genuine opinion. Do not refresh or close the page while a vote is being submitted.
+        </p>
       </div>
     </section>
 
-    <section id="results" style="margin-top:32px">
+    <section class="section" id="results">
       <div class="section-heading">
         <div>
-          <h2>Live poll results</h2>
-          <p>Results reflect the votes recorded by this website.</p>
+          <h2>Live Poll Results</h2>
+          <p class="subheading">Results reflect recorded submissions to this website, not official election results.</p>
         </div>
-      </div>
-
-      <div class="panel results-panel">
-        <h2>Poll snapshot</h2>
-        <p class="subtext">The totals update when the results are refreshed.</p>
-
-        <div class="results-summary">
-          <div class="summary-box">
-            <span>Total votes recorded</span>
-            <strong id="total-votes">—</strong>
-          </div>
-          <div class="summary-box">
-            <span>Candidates listed</span>
-            <strong id="result-candidate-count">—</strong>
-          </div>
-        </div>
-
-        <div id="results-list" aria-live="polite">
-          <div class="empty-state">Loading poll results…</div>
-        </div>
-
-        <button id="refresh-results" class="btn btn-secondary" type="button">
-          ↻ Refresh results
+        <button id="refresh-results" class="button button-outline" type="button">
+          ↻ Refresh
         </button>
-        <div id="results-message" class="vote-message" role="status" aria-live="polite"></div>
       </div>
-    </section>
 
-    <section class="share-panel">
-      <h2>Make your voice count 🇳🇬</h2>
-      <p>Share WhoYouChoose with friends and invite them to take part in the opinion poll.</p>
-      <button id="share-whatsapp" class="btn" type="button">
-        Share on WhatsApp
-      </button>
+      <div class="results-panel">
+        <div class="results-summary">
+          <div class="stat">
+            <div class="stat-label">Total votes recorded</div>
+            <div class="stat-value" id="total-votes">—</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Candidates listed</div>
+            <div class="stat-value" id="result-candidate-count">—</div>
+          </div>
+        </div>
+
+        <div id="results-message" class="message" role="status"></div>
+        <div id="results-list">
+          <div class="loading">Loading poll results…</div>
+        </div>
+
+        <p class="help-text">
+          Percentages are calculated from the vote counts returned by the poll database.
+        </p>
+      </div>
     </section>
   </main>
 
   <footer>
-    <div class="footer-links">
-      <a href="#candidates">Candidates</a>
-      <a href="#results">Poll results</a>
-      <a href="#" id="footer-share">Share this poll</a>
-    </div>
-    <div><strong>WhoYouChoose 🇳🇬</strong></div>
-    <div>Independent online opinion poll • Nigeria 2027</div>
-    <div style="margin-top:7px">
-      Unofficial poll. Not affiliated with INEC. Results are not official election results.
-    </div>
+    <div class="footer-brand">WhoYouChoose 🇳🇬</div>
+    <p>An independent public opinion poll about Nigeria's 2027 presidential election.</p>
+    <p>This website is not operated by INEC, the Nigerian government, or any political party.</p>
+    <p>© <span id="year"></span> WhoYouChoose. Public opinion is not an election result.</p>
   </footer>
 
   <script>
     "use strict";
 
-    // Existing Supabase project settings.
-    const SUPABASE_URL =
-      "https://dhznqadwkfcjqgoqbqyk.supabase.co";
-
-    const SUPABASE_KEY =
-      "sb_publishable_uDRIn91CPoWtBCDJ-Uh7SQ_3_nLU_lK";
-
+    // Existing public Supabase project settings.
+    const SUPABASE_URL = "https://dhznqadwkfcjqgoqbqyk.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_uDRIn91CPoWtBCDJ-Uh7SQ_3_nLU_lK";
     const EDGE_FUNCTION_URL =
       SUPABASE_URL + "/functions/v1/submit-vote-secure-v2";
 
-    const client = window.supabase.createClient(
-      SUPABASE_URL,
-      SUPABASE_KEY
-    );
+    // Add photos by using the exact candidate name returned by Supabase.
+    // Example:
+    // "Candidate Name": "https://your-image-host.com/candidate.jpg"
+    const candidatePhotos = {
+    };
 
+    let supabaseClient = null;
     let candidates = [];
     let selectedCandidateId = null;
     let turnstileToken = "";
-    let voteSubmitting = false;
+    let isSubmitting = false;
+    let voteAlreadySubmittedThisSession = false;
 
-    const candidateGrid = document.getElementById("candidate-grid");
-    const candidateCount = document.getElementById("candidate-count");
-    const selectedCandidateBox = document.getElementById("selected-candidate");
-    const submitButton = document.getElementById("submit-vote");
-    const voteMessage = document.getElementById("vote-message");
-    const resultsList = document.getElementById("results-list");
-    const totalVotesElement = document.getElementById("total-votes");
-    const resultCandidateCount = document.getElementById("result-candidate-count");
-    const resultsMessage = document.getElementById("results-message");
+    const $ = (id) => document.getElementById(id);
 
-    /*
-      Candidate photos:
-      1. If a candidate row returned by Supabase contains photo_url,
-         image_url, or image, that URL is used automatically.
-      2. You can add verified photo URLs below using the exact candidate
-         name as the key. Do not use an unverified photo of a candidate.
-    */
-    const candidatePhotos = {
-      // "Exact Candidate Name": "https://your-image-host.com/photo.jpg",
-    };
+    $("year").textContent = new Date().getFullYear();
 
-    function getValue(row, keys, fallback = "") {
+    function showMessage(elementId, text, type) {
+      const el = $(elementId);
+      el.textContent = text;
+      el.className = "message show " + (type || "info");
+    }
+
+    function clearMessage(elementId) {
+      const el = $(elementId);
+      el.textContent = "";
+      el.className = "message";
+    }
+
+    function safeText(value, fallback) {
+      if (value === null || value === undefined || value === "") {
+        return fallback || "";
+      }
+      return String(value);
+    }
+
+    function firstValue(row, keys, fallback) {
+      if (!row || typeof row !== "object") return fallback;
+
       for (const key of keys) {
         if (
-          row &&
-          row[key] !== undefined &&
+          Object.prototype.hasOwnProperty.call(row, key) &&
           row[key] !== null &&
-          String(row[key]).trim() !== ""
+          row[key] !== undefined &&
+          row[key] !== ""
         ) {
           return row[key];
         }
       }
+
       return fallback;
     }
 
-    function getCandidateId(candidate) {
-      return getValue(candidate, [
-        "candidate_id",
-        "id",
-        "candidateId"
-      ], null);
+    function getCandidateId(row) {
+      return firstValue(
+        row,
+        ["candidate_id", "id", "candidateId", "candidate_uuid"],
+        null
+      );
     }
 
-    function getCandidateName(candidate) {
-      return String(getValue(candidate, [
-        "candidate_name",
-        "name",
-        "full_name",
-        "candidate"
-      ], "Candidate"));
+    function getCandidateName(row) {
+      return safeText(
+        firstValue(
+          row,
+          ["candidate_name", "name", "full_name", "candidate"],
+          null
+        ),
+        "Unnamed candidate"
+      );
     }
 
-    function getCandidateParty(candidate) {
-      return String(getValue(candidate, [
-        "party_name",
-        "party",
-        "party_acronym",
-        "party_abbreviation"
-      ], "Political party not provided"));
+    function getCandidateParty(row) {
+      return safeText(
+        firstValue(
+          row,
+          [
+            "party_name",
+            "party",
+            "party_acronym",
+            "party_abbreviation",
+            "party_name_abbreviation"
+          ],
+          null
+        ),
+        "Party not listed"
+      );
     }
 
-    function getCandidatePhoto(candidate) {
-      const dbPhoto = getValue(candidate, [
-        "photo_url",
-        "image_url",
-        "photo",
-        "image"
-      ], "");
+    function getVoteCount(row) {
+      const raw = firstValue(
+        row,
+        ["votes", "vote_count", "total_votes", "count", "votes_count"],
+        0
+      );
+      const number = Number(raw);
+      return Number.isFinite(number) && number >= 0 ? number : 0;
+    }
 
-      if (dbPhoto && isSafeImageUrl(String(dbPhoto))) {
-        return String(dbPhoto);
-      }
-
-      const name = getCandidateName(candidate);
-      const mappedPhoto = candidatePhotos[name];
-
-      if (mappedPhoto && isSafeImageUrl(mappedPhoto)) {
-        return mappedPhoto;
-      }
-
-      return "";
+    function getSafePercentage(value) {
+      const number = Number(value);
+      if (!Number.isFinite(number)) return null;
+      return Math.max(0, Math.min(100, number));
     }
 
     function isSafeImageUrl(value) {
@@ -877,4 +740,593 @@
         const url = new URL(value);
         return url.protocol === "https:" || url.protocol === "http:";
       } catch (_) {
-        return 
+        return false;
+      }
+    }
+
+    function getPhotoUrl(name, row) {
+      const fromRow = firstValue(
+        row,
+        ["photo_url", "image_url", "candidate_photo", "photo", "image"],
+        ""
+      );
+
+      if (fromRow && isSafeImageUrl(String(fromRow))) {
+        return String(fromRow);
+      }
+
+      const fromMap = candidatePhotos[name];
+      if (fromMap && isSafeImageUrl(fromMap)) {
+        return fromMap;
+      }
+
+      return "";
+    }
+
+    function makeInitials(name) {
+      return safeText(name, "?")
+        .trim()
+        .split(/\s+/)
+        .slice(0, 2)
+        .map(part => part.charAt(0))
+        .join("")
+        .toUpperCase() || "?";
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function normalizeRows(data) {
+      if (Array.isArray(data)) return data;
+      if (data && Array.isArray(data.data)) return data.data;
+      if (data && Array.isArray(data.rows)) return data.rows;
+      if (data && Array.isArray(data.results)) return data.results;
+      return [];
+    }
+
+    function getTurnstileResponse() {
+      if (turnstileToken) return turnstileToken;
+
+      const responseField = document.querySelector(
+        'input[name="cf-turnstile-response"]'
+      );
+
+      return responseField ? responseField.value : "";
+    }
+
+    function updateSubmitButton() {
+      const button = $("submit-vote");
+      const hasSelection = selectedCandidateId !== null &&
+        selectedCandidateId !== undefined &&
+        selectedCandidateId !== "";
+
+      button.disabled =
+        !hasSelection ||
+        !turnstileToken ||
+        isSubmitting ||
+        voteAlreadySubmittedThisSession;
+
+      if (isSubmitting) {
+        button.textContent = "Submitting vote…";
+      } else if (voteAlreadySubmittedThisSession) {
+        button.textContent = "Vote submitted";
+      } else {
+        button.textContent = "Submit My Vote";
+      }
+    }
+
+    function selectCandidate(candidateId) {
+      if (voteAlreadySubmittedThisSession || isSubmitting) return;
+
+      selectedCandidateId = candidateId;
+
+      const candidate = candidates.find(
+        item => String(getCandidateId(item)) === String(candidateId)
+      );
+
+      if (candidate) {
+        $("selected-candidate").textContent =
+          getCandidateName(candidate) + " — " + getCandidateParty(candidate);
+      }
+
+      document.querySelectorAll(".candidate-card").forEach(card => {
+        const isSelected = card.dataset.candidateId === String(candidateId);
+        card.classList.toggle("selected", isSelected);
+
+        const button = card.querySelector(".select-button");
+        if (button) {
+          button.textContent = isSelected ? "✓ Selected" : "Choose Candidate";
+          button.setAttribute("aria-pressed", String(isSelected));
+        }
+
+        const note = card.querySelector(".selected-note");
+        if (note) {
+          note.textContent = isSelected ? "Your current selection" : "";
+        }
+      });
+
+      clearMessage("vote-message");
+      updateSubmitButton();
+    }
+
+    function renderCandidates() {
+      const grid = $("candidate-grid");
+      grid.replaceChildren();
+
+      const usableCandidates = candidates.filter(
+        row => getCandidateId(row) !== null &&
+          getCandidateId(row) !== undefined &&
+          getCandidateId(row) !== ""
+      );
+
+      $("candidate-count").textContent =
+        usableCandidates.length + " candidate" +
+        (usableCandidates.length === 1 ? "" : "s");
+
+      $("result-candidate-count").textContent =
+        String(usableCandidates.length);
+
+      if (!usableCandidates.length) {
+        grid.innerHTML =
+          '<div class="empty-state">No candidates were returned by the database. Please check the candidate data and the get_poll_candidates RPC.</div>';
+
+        showMessage(
+          "candidate-message",
+          "The candidate list is empty. The page is connected, but the candidate query returned no usable records.",
+          "error"
+        );
+        return;
+      }
+
+      clearMessage("candidate-message");
+
+      usableCandidates.forEach(row => {
+        const id = getCandidateId(row);
+        const name = getCandidateName(row);
+        const party = getCandidateParty(row);
+        const photo = getPhotoUrl(name, row);
+
+        const card = document.createElement("article");
+        card.className = "candidate-card";
+        card.dataset.candidateId = String(id);
+
+        const photoWrap = document.createElement("div");
+        photoWrap.className = "photo-wrap";
+
+        if (photo) {
+          const img = document.createElement("img");
+          img.className = "candidate-photo";
+          img.src = photo;
+          img.alt = name;
+          img.loading = "lazy";
+          img.referrerPolicy = "no-referrer";
+
+          const placeholder = document.createElement("div");
+          placeholder.className = "photo-placeholder";
+          placeholder.textContent = makeInitials(name);
+          placeholder.style.display = "none";
+
+          img.addEventListener("error", () => {
+            img.remove();
+            placeholder.style.display = "block";
+          });
+
+          photoWrap.append(img, placeholder);
+        } else {
+          const placeholder = document.createElement("div");
+          placeholder.className = "photo-placeholder";
+          placeholder.textContent = makeInitials(name);
+          photoWrap.appendChild(placeholder);
+        }
+
+        const partyLabel = document.createElement("div");
+        partyLabel.className = "party-label";
+        partyLabel.textContent = party;
+        photoWrap.appendChild(partyLabel);
+
+        const body = document.createElement("div");
+        body.className = "candidate-body";
+
+        const title = document.createElement("h3");
+        title.className = "candidate-name";
+        title.textContent = name;
+
+        const partyText = document.createElement("p");
+        partyText.className = "candidate-party";
+        partyText.textContent = party;
+
+        const chooseButton = document.createElement("button");
+        chooseButton.className = "button button-green select-button";
+        chooseButton.type = "button";
+        chooseButton.textContent = "Choose Candidate";
+        chooseButton.setAttribute("aria-pressed", "false");
+        chooseButton.disabled = voteAlreadySubmittedThisSession;
+
+        chooseButton.addEventListener("click", () => selectCandidate(id));
+
+        const selectedNote = document.createElement("p");
+        selectedNote.className = "selected-note";
+        selectedNote.textContent = "";
+
+        body.append(title, partyText, chooseButton, selectedNote);
+        card.append(photoWrap, body);
+        grid.appendChild(card);
+      });
+    }
+
+    async function loadCandidates() {
+      const grid = $("candidate-grid");
+      grid.innerHTML = '<div class="loading">Loading candidates…</div>';
+      clearMessage("candidate-message");
+
+      try {
+        const { data, error } = await supabaseClient.rpc("get_poll_candidates");
+
+        if (error) throw error;
+
+        candidates = normalizeRows(data);
+        renderCandidates();
+      } catch (error) {
+        console.error("Candidate loading error:", error);
+
+        grid.innerHTML =
+          '<div class="empty-state">Candidates could not be loaded. Use the Refresh button below to try again.</div>';
+
+        $("candidate-count").textContent = "Unavailable";
+
+        showMessage(
+          "candidate-message",
+          "Candidate loading failed: " + safeText(error.message, "Unknown database error"),
+          "error"
+        );
+      }
+    }
+
+    function findTotalFromRows(rows) {
+      const directTotal = rows.reduce((total, row) => {
+        const value = firstValue(
+          row,
+          ["total_votes", "total_vote_count", "all_votes"],
+          null
+        );
+
+        if (value === null) return total;
+
+        const n = Number(value);
+        return Number.isFinite(n) && n >= 0 ? Math.max(total, n) : total;
+      }, 0);
+
+      if (directTotal > 0) return directTotal;
+
+      return rows.reduce((sum, row) => sum + getVoteCount(row), 0);
+    }
+
+    function renderResults(rows) {
+      const list = $("results-list");
+      list.replaceChildren();
+
+      const validRows = rows.filter(row =>
+        getCandidateId(row) !== null ||
+        firstValue(row, ["candidate_name", "name", "full_name", "candidate"], null) !== null
+      );
+
+      const totalVotes = findTotalFromRows(validRows);
+      $("total-votes").textContent = totalVotes.toLocaleString();
+
+      if (!validRows.length) {
+        list.innerHTML =
+          '<div class="empty-state">No results are available yet. The results query returned no candidate rows.</div>';
+        return;
+      }
+
+      const results = validRows.map(row => {
+        const votes = getVoteCount(row);
+        const rawPercent = firstValue(
+          row,
+          ["percentage", "vote_percentage", "percent", "percentage_of_votes"],
+          null
+        );
+
+        let percentage = getSafePercentage(rawPercent);
+
+        if (percentage === null) {
+          percentage = totalVotes > 0 ? (votes / totalVotes) * 100 : 0;
+        }
+
+        return {
+          name: getCandidateName(row),
+          party: getCandidateParty(row),
+          votes,
+          percentage
+        };
+      });
+
+      results.sort((a, b) => b.votes - a.votes);
+
+      results.forEach(result => {
+        const row = document.createElement("div");
+        row.className = "result-row";
+
+        const top = document.createElement("div");
+        top.className = "result-top";
+
+        const left = document.createElement("div");
+
+        const name = document.createElement("div");
+        name.className = "result-name";
+        name.textContent = result.name;
+
+        const votes = document.createElement("div");
+        votes.className = "result-votes";
+        votes.textContent =
+          result.party + " · " + result.votes.toLocaleString() + " votes";
+
+        left.append(name, votes);
+
+        const percent = document.createElement("div");
+        percent.className = "result-percent";
+        percent.textContent = result.percentage.toFixed(1) + "%";
+
+        top.append(left, percent);
+
+        const track = document.createElement("div");
+        track.className = "progress-track";
+        track.setAttribute("role", "progressbar");
+        track.setAttribute("aria-label", result.name + " poll share");
+        track.setAttribute("aria-valuemin", "0");
+        track.setAttribute("aria-valuemax", "100");
+        track.setAttribute("aria-valuenow", String(result.percentage));
+
+        const fill = document.createElement("div");
+        fill.className = "progress-fill";
+        fill.style.width = result.percentage + "%";
+
+        track.appendChild(fill);
+        row.append(top, track);
+        list.appendChild(row);
+      });
+    }
+
+    async function loadResults() {
+      $("results-list").innerHTML =
+        '<div class="loading">Loading poll results…</div>';
+      clearMessage("results-message");
+
+      try {
+        const { data, error } = await supabaseClient.rpc("get_poll_results");
+
+        if (error) throw error;
+
+        const rows = normalizeRows(data);
+        renderResults(rows);
+      } catch (error) {
+        console.error("Results loading error:", error);
+
+        $("total-votes").textContent = "—";
+        $("results-list").innerHTML =
+          '<div class="empty-state">Results could not be loaded. Please try refreshing.</div>';
+
+        showMessage(
+          "results-message",
+          "Results loading failed: " + safeText(error.message, "Unknown database error"),
+          "error"
+        );
+      }
+    }
+
+    window.onTurnstileSuccess = function(token) {
+      turnstileToken = token || "";
+      clearMessage("vote-message");
+      updateSubmitButton();
+    };
+
+    window.onTurnstileExpired = function() {
+      turnstileToken = "";
+      updateSubmitButton();
+
+      showMessage(
+        "vote-message",
+        "The security check expired. Please complete it again.",
+        "error"
+      );
+    };
+
+    window.onTurnstileError = function() {
+      turnstileToken = "";
+      updateSubmitButton();
+
+      showMessage(
+        "vote-message",
+        "The security check could not load. Check your internet connection and refresh the page.",
+        "error"
+      );
+    };
+
+    async function submitVote() {
+      if (isSubmitting) return;
+
+      if (voteAlreadySubmittedThisSession) {
+        showMessage(
+          "vote-message",
+          "A vote has already been submitted from this page session.",
+          "info"
+        );
+        return;
+      }
+
+      if (selectedCandidateId === null || selectedCandidateId === undefined) {
+        showMessage("vote-message", "Please choose a candidate first.", "error");
+        return;
+      }
+
+      const token = getTurnstileResponse();
+
+      if (!token) {
+        showMessage(
+          "vote-message",
+          "Please complete the Cloudflare security check before submitting.",
+          "error"
+        );
+        return;
+      }
+
+      isSubmitting = true;
+      updateSubmitButton();
+      clearMessage("vote-message");
+
+      try {
+        const response = await fetch(EDGE_FUNCTION_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": SUPABASE_KEY,
+            "Authorization": "Bearer " + SUPABASE_KEY
+          },
+          body: JSON.stringify({
+            candidate_id: selectedCandidateId,
+            turnstileToken: token
+          })
+        });
+
+        const rawText = await response.text();
+        let result = {};
+
+        try {
+          result = rawText ? JSON.parse(rawText) : {};
+        } catch (_) {
+          result = { message: rawText };
+        }
+
+        if (!response.ok || result.success === false || result.error) {
+          const serverMessage = firstValue(
+            result,
+            ["error", "message", "details"],
+            "The server did not accept the vote."
+          );
+
+          throw new Error(String(serverMessage));
+        }
+
+        voteAlreadySubmittedThisSession = true;
+        selectedCandidateId = null;
+        turnstileToken = "";
+
+        $("selected-candidate").textContent =
+          "Thank you. Your vote submission was accepted.";
+
+        document.querySelectorAll(".select-button").forEach(button => {
+          button.disabled = true;
+        });
+
+        document.querySelectorAll(".candidate-card").forEach(card => {
+          card.classList.remove("selected");
+        });
+
+        showMessage(
+          "vote-message",
+          safeText(
+            firstValue(result, ["message"], null),
+            "Your vote has been submitted successfully. Thank you for participating!"
+          ),
+          "success"
+        );
+
+        if (window.turnstile && typeof window.turnstile.reset === "function") {
+          try { window.turnstile.reset(); } catch (_) {}
+        }
+
+        await loadResults();
+      } catch (error) {
+        console.error("Vote submission error:", error);
+
+        showMessage(
+          "vote-message",
+          "Your vote was not confirmed: " +
+            safeText(error.message, "A connection or server error occurred") +
+            " Please check the message before trying again.",
+          "error"
+        );
+
+        turnstileToken = "";
+
+        if (window.turnstile && typeof window.turnstile.reset === "function") {
+          try { window.turnstile.reset(); } catch (_) {}
+        }
+      } finally {
+        isSubmitting = false;
+        updateSubmitButton();
+      }
+    }
+
+    async function initialize() {
+      $("candidate-grid").innerHTML =
+        '<div class="loading">Connecting to the poll database…</div>';
+
+      $("results-list").innerHTML =
+        '<div class="loading">Connecting to the poll database…</div>';
+
+      if (!window.supabase || typeof window.supabase.createClient !== "function") {
+        showMessage(
+          "candidate-message",
+          "The Supabase library did not load. Check your internet connection and reload the page.",
+          "error"
+        );
+
+        $("candidate-grid").innerHTML =
+          '<div class="empty-state">The database library could not load.</div>';
+
+        $("results-list").innerHTML =
+          '<div class="empty-state">The database library could not load.</div>';
+        return;
+      }
+
+      try {
+        supabaseClient = window.supabase.createClient(
+          SUPABASE_URL,
+          SUPABASE_KEY
+        );
+      } catch (error) {
+        console.error("Supabase initialization error:", error);
+
+        $("candidate-grid").innerHTML =
+          '<div class="empty-state">Could not initialize the database connection.</div>';
+
+        $("results-list").innerHTML =
+          '<div class="empty-state">Could not initialize the database connection.</div>';
+        return;
+      }
+
+      await Promise.all([
+        loadCandidates(),
+        loadResults()
+      ]);
+
+      updateSubmitButton();
+    }
+
+    $("submit-vote").addEventListener("click", submitVote);
+
+    $("refresh-results").addEventListener("click", async () => {
+      $("refresh-results").disabled = true;
+      $("refresh-results").textContent = "Refreshing…";
+
+      await Promise.all([
+        loadCandidates(),
+        loadResults()
+      ]);
+
+      $("refresh-results").disabled = false;
+      $("refresh-results").textContent = "↻ Refresh";
+      updateSubmitButton();
+    });
+
+    initialize();
+  </script>
+</body>
+</html>
