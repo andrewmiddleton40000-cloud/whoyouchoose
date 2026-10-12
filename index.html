@@ -9,7 +9,7 @@
 <meta name="description" content="An unofficial public opinion poll for Nigeria's 2027 presidential election.">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileLoad" async defer onerror="onTurnstileScriptError()"></script>
 
 <style>
 :root {
@@ -136,13 +136,9 @@ footer p{max-width:800px;margin:7px auto}.footer-brand{color:white;font-weight:b
     <div id="selected-candidate" class="selected-box">No candidate selected yet.</div>
     <div id="vote-message" class="message" role="status" aria-live="polite"></div>
     <div class="turnstile-wrap">
-      <div class="cf-turnstile"
-        data-sitekey="0x4AAAAAAFTzUgfW1ygfdS-Z"
-        data-callback="onTurnstileSuccess"
-        data-expired-callback="onTurnstileExpired"
-        data-error-callback="onTurnstileError"
-        data-theme="light"></div>
+      <div id="turnstile-widget"></div>
     </div>
+    <button id="retry-turnstile" class="btn outline" type="button" hidden>↻ Retry security check</button>
     <button id="submit-vote" class="btn green" type="button" disabled>Submit My Vote</button>
     <p class="help">Please submit only your own genuine opinion.</p>
   </div>
@@ -458,6 +454,67 @@ async function loadResults() {
   });
 }
 
+const TURNSTILE_SITE_KEY = "0x4AAAAAAFUXWBnZ1fURYC7c";
+let turnstileWidgetId = null;
+let turnstileLoaded = false;
+
+// Explain Turnstile error codes in plain language.
+// See https://developers.cloudflare.com/turnstile/troubleshooting/client-side-errors/error-codes/
+function turnstileErrorText(code) {
+  const c = String(code || "");
+  if (c === "110200") return "The security check is not enabled for this website address (" + location.hostname + "). The site owner needs to add it to the Turnstile widget's allowed domains in Cloudflare.";
+  if (c.startsWith("1101")) return "The security check is misconfigured (invalid site key). Please contact the site owner.";
+  if (c === "110500") return "Your browser is not supported by the security check. Please update it or try another browser.";
+  if (c.startsWith("1106") || c.startsWith("102") || c.startsWith("103") || c.startsWith("104") || c.startsWith("106") || c.startsWith("300") || c.startsWith("600")) return "The security check could not verify your browser. Please retry, or try disabling VPNs/ad blockers.";
+  return "The security check could not load. Check your connection and retry.";
+}
+
+function showTurnstileRetry(show) {
+  $("retry-turnstile").hidden = !show;
+}
+
+function renderTurnstile() {
+  if (!window.turnstile) return;
+  showTurnstileRetry(false);
+  turnstileToken = "";
+  updateButton();
+  if (turnstileWidgetId !== null) {
+    window.turnstile.reset(turnstileWidgetId);
+    return;
+  }
+  turnstileWidgetId = window.turnstile.render("#turnstile-widget", {
+    sitekey: TURNSTILE_SITE_KEY,
+    theme: "light",
+    "retry": "auto",
+    "refresh-expired": "auto",
+    callback: window.onTurnstileSuccess,
+    "expired-callback": window.onTurnstileExpired,
+    "error-callback": window.onTurnstileError
+  });
+}
+
+function resetTurnstile() {
+  turnstileToken = "";
+  if (window.turnstile && turnstileWidgetId !== null) {
+    try { window.turnstile.reset(turnstileWidgetId); }
+    catch (resetError) { console.error("Turnstile reset failed:", resetError); }
+  }
+}
+
+window.onTurnstileLoad = function() {
+  turnstileLoaded = true;
+  renderTurnstile();
+};
+window.onTurnstileScriptError = function() {
+  message("vote-message", "The security check could not be downloaded. Check your connection or ad blocker, then refresh the page.", "error");
+};
+// The async Turnstile script may finish before this script defines onTurnstileLoad.
+if (window.turnstile) window.onTurnstileLoad();
+setTimeout(() => {
+  if (!turnstileLoaded && window.turnstile) window.onTurnstileLoad();
+  else if (!turnstileLoaded) window.onTurnstileScriptError();
+}, 15000);
+
 window.onTurnstileSuccess = function(token) {
   turnstileToken = token || "";
   clearMessage("vote-message");
@@ -468,10 +525,14 @@ window.onTurnstileExpired = function() {
   updateButton();
   message("vote-message", "The security check expired. Please complete it again.", "error");
 };
-window.onTurnstileError = function() {
+window.onTurnstileError = function(code) {
+  console.error("Turnstile error code:", code);
   turnstileToken = "";
   updateButton();
-  message("vote-message", "The security check could not load. Check your connection and refresh.", "error");
+  message("vote-message", turnstileErrorText(code), "error");
+  showTurnstileRetry(true);
+  // Returning true tells Turnstile the error was handled.
+  return true;
 };
 
 async function submitVote() {
@@ -499,21 +560,28 @@ async function submitVote() {
   try {
     const candidateId = getCandidateId(chosen);
 
-    const response = await fetch(EDGE_FUNCTION_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "apikey": SUPABASE_KEY,
-        "Authorization": "Bearer " + SUPABASE_KEY
-      },
-      body: JSON.stringify({
-        candidate_id: candidateId,
-        candidateId: candidateId,
-        candidate: candidateId,
-        turnstileToken: turnstileToken,
-        turnstile_token: turnstileToken
-      })
-    });
+    let response;
+    try {
+      response = await fetch(EDGE_FUNCTION_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": SUPABASE_KEY,
+          "Authorization": "Bearer " + SUPABASE_KEY
+        },
+        body: JSON.stringify({
+          candidate_id: candidateId,
+          candidateId: candidateId,
+          candidate: candidateId,
+          turnstileToken: turnstileToken,
+          turnstile_token: turnstileToken
+        })
+      });
+    } catch (networkError) {
+      // A blocked CORS preflight (e.g. this domain missing from the function's
+      // allowed origins) surfaces as a generic network error.
+      throw new Error("Could not reach the voting server. Please check your connection and try again.");
+    }
 
     const responseText = await response.text();
     let result = {};
@@ -522,6 +590,10 @@ async function submitVote() {
       result = responseText ? JSON.parse(responseText) : {};
     } catch (_) {
       result = { message: responseText };
+    }
+
+    if (response.status === 403 && /origin/i.test(result.error || "")) {
+      throw new Error("Voting is temporarily unavailable on this website address. Please try again later.");
     }
 
     if (!response.ok || result.success === false) {
@@ -562,15 +634,7 @@ async function submitVote() {
       "error"
     );
 
-    turnstileToken = "";
-
-    if (window.turnstile && typeof window.turnstile.reset === "function") {
-      try {
-        window.turnstile.reset();
-      } catch (resetError) {
-        console.error("Turnstile reset failed:", resetError);
-      }
-    }
+    resetTurnstile();
 
   } finally {
     isSubmitting = false;
@@ -579,6 +643,10 @@ async function submitVote() {
 }
 
 $("submit-vote").addEventListener("click", submitVote);
+$("retry-turnstile").addEventListener("click", () => {
+  clearMessage("vote-message");
+  renderTurnstile();
+});
 
 $("refresh-results").addEventListener("click", async () => {
   const button = $("refresh-results");

@@ -1,0 +1,5 @@
+# Static site: no build step. This overrides the invalid "." build command
+# set in the Netlify UI, which caused every deploy to fail.
+[build]
+  command = "echo 'Static site - no build step'"
+  publish = "."
