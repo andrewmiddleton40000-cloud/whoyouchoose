@@ -9,86 +9,210 @@
 <meta name="description" content="An unofficial public opinion poll for Nigeria's 2027 presidential election.">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileLoad" async defer onerror="onTurnstileScriptError()"></script>
 
 <style>
 :root {
-  --green:#087443;--deep:#073b2a;--light:#e9f6ee;
-  --navy:#102b46;--bg:#f5f8f6;--text:#17251e;
-  --muted:#66756c;--border:#dce7df;--danger:#b42318;
+  --green:#087443;
+  --deep:#073b2a;
+  --light:#e9f6ee;
+  --navy:#102b46;
+  --bg:#f5f8f6;
+  --text:#17251e;
+  --muted:#66756c;
+  --border:#dce7df;
+  --danger:#b42318;
 }
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif;line-height:1.55}
-button,input{font:inherit}
-button:disabled{opacity:.55;cursor:not-allowed}
-.topbar{background:var(--deep);color:white;padding:14px 18px}
-.nav{max-width:1120px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
-.brand{display:flex;align-items:center;gap:10px;font-size:21px;font-weight:800}
-.flag{width:36px;height:24px;display:inline-flex;overflow:hidden;border-radius:3px;border:1px solid #ffffff66}
-.flag span{flex:1}.flag .g{background:#008751}.flag .w{background:white}
-.nav a{color:white;text-decoration:none;font-size:14px;font-weight:bold}
-.hero{background:linear-gradient(135deg,#073b2a,#0b6543 65%,#102b46);color:white;padding:50px 18px;text-align:center}
-.hero-inner{max-width:800px;margin:auto}
-.eyebrow{display:inline-block;padding:6px 12px;border:1px solid #ffffff66;border-radius:50px;font-size:12px;font-weight:bold;letter-spacing:1px}
-h1{font-size:clamp(32px,7vw,55px);line-height:1.08;margin:20px 0 15px;letter-spacing:-1px}
-.hero p{max-width:620px;margin:auto;color:#e5f1e9}
-.actions{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:24px}
-.btn{border:0;border-radius:9px;padding:12px 17px;font-weight:bold;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
-.white{background:white;color:var(--deep)}
-.green{background:var(--green);color:white}
-.outline{background:white;color:var(--deep);border:1px solid var(--border)}
-.notice-wrap{max-width:1000px;margin:20px auto;padding:0 16px}
-.notice{background:#fff9e8;color:#634b13;border:1px solid #f0dfaa;border-radius:10px;padding:13px 15px;font-size:13px}
-main{max-width:1120px;margin:auto;padding:28px 16px 55px}
-.section{margin-top:32px}.section:first-child{margin-top:0}
-.heading{display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap;margin-bottom:17px}
-h2{color:var(--deep);font-size:clamp(23px,4vw,30px);line-height:1.2;margin:0 0 6px}
-.sub{margin:0;color:var(--muted);font-size:14px}
-.status,.help{color:var(--muted);font-size:13px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:17px}
-.card{background:white;border:1px solid var(--border);border-radius:15px;overflow:hidden;box-shadow:0 8px 26px #073b2a12;display:flex;flex-direction:column;min-width:0}
-.card.selected{border:2px solid var(--green)}
-.photo{height:205px;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;background:linear-gradient(135deg,#e8f3eb,#e7edf4)}
-.photo img{width:100%;height:100%;object-fit:cover;object-position:center 20%}
-.initials{font-size:58px;font-weight:bold;color:#6c9180}
-.party-label{position:absolute;bottom:10px;left:10px;background:#073b2aee;color:white;border-radius:6px;padding:5px 9px;font-size:11px;font-weight:bold;max-width:calc(100% - 20px);overflow-wrap:anywhere}
-.card-body{padding:15px;display:flex;flex-direction:column;flex:1}
-.candidate-name{font-size:17px;font-weight:bold;line-height:1.35;margin:0 0 5px;overflow-wrap:anywhere}
-.party{color:var(--muted);font-size:13px;margin:0 0 13px}
-.choose{width:100%;margin-top:auto}
-.selected-note{font-size:12px;color:var(--green);font-weight:bold}
-.panel{background:white;border:1px solid var(--border);border-radius:15px;padding:20px;box-shadow:0 8px 26px #073b2a0c}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px}
-.stat{background:#f0f7f2;border-radius:10px;padding:14px}
-.stat-label{color:var(--muted);font-size:12px;font-weight:bold}
-.stat-value{color:var(--deep);font-size:25px;font-weight:bold}
-.result-row{padding:15px 0;border-top:1px solid #edf1ed}
-.result-top{display:flex;justify-content:space-between;gap:12px;margin-bottom:8px}
-.result-name{font-size:14px;font-weight:bold;overflow-wrap:anywhere}
-.result-votes{color:var(--muted);font-size:12px}
-.percent{font-size:16px;font-weight:bold;color:var(--deep);white-space:nowrap}
-.track{height:10px;background:#e9efea;border-radius:99px;overflow:hidden}
-.fill{height:100%;background:linear-gradient(90deg,#087443,#17a667);border-radius:99px}
-.selected-box{border-radius:10px;background:var(--light);padding:14px;margin:16px 0;font-weight:bold;color:var(--deep);overflow-wrap:anywhere}
-.turnstile-wrap{margin:16px 0;min-height:65px;overflow-x:auto}
-.message{display:none;padding:12px 14px;border-radius:9px;margin:14px 0;font-size:14px;overflow-wrap:anywhere}
-.message.show{display:block}
-.error{background:#fff0ef;color:var(--danger);border:1px solid #f4c7c3}
-.success{background:#e9f8ef;color:#126239;border:1px solid #b9e4c9}
-.info{background:#edf4ff;color:#214f88;border:1px solid #c9ddfb}
-.empty{background:white;border:1px dashed #cbd9cf;color:var(--muted);border-radius:12px;padding:22px;text-align:center;font-size:14px}
-.loading{padding:22px;text-align:center;color:var(--muted);font-size:14px}
-footer{background:#082f23;color:#e1eee5;padding:25px 16px;text-align:center;font-size:12px}
-footer p{max-width:800px;margin:7px auto}.footer-brand{color:white;font-weight:bold;font-size:17px}
-@media(max-width:520px){
- .hero{padding:40px 17px}.brand{font-size:19px}
- .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
- .photo{height:165px}.card-body{padding:11px}
- .candidate-name{font-size:15px}.party{font-size:12px}
- .choose{font-size:12px;padding:10px 7px}
- .panel{padding:15px}
+* { box-sizing:border-box; }
+body {
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Arial,Helvetica,sans-serif;
+  line-height:1.55;
 }
-@media(max-width:350px){.grid{grid-template-columns:1fr}.photo{height:230px}}
+button { font:inherit; }
+button:disabled { opacity:.55; cursor:not-allowed; }
+.topbar { background:var(--deep); color:white; padding:14px 18px; }
+.nav {
+  max-width:1120px;
+  margin:auto;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  flex-wrap:wrap;
+}
+.brand { display:flex; align-items:center; gap:10px; font-size:21px; font-weight:800; }
+.flag {
+  width:36px;
+  height:24px;
+  display:inline-flex;
+  overflow:hidden;
+  border-radius:3px;
+  border:1px solid #ffffff66;
+}
+.flag span { flex:1; }
+.flag .g { background:#008751; }
+.flag .w { background:white; }
+.nav a { color:white; text-decoration:none; font-size:14px; font-weight:bold; }
+.hero {
+  background:linear-gradient(135deg,#073b2a,#0b6543 65%,#102b46);
+  color:white;
+  padding:50px 18px;
+  text-align:center;
+}
+.hero-inner { max-width:800px; margin:auto; }
+.eyebrow {
+  display:inline-block;
+  padding:6px 12px;
+  border:1px solid #ffffff66;
+  border-radius:50px;
+  font-size:12px;
+  font-weight:bold;
+  letter-spacing:1px;
+}
+h1 { font-size:clamp(32px,7vw,55px); line-height:1.08; margin:20px 0 15px; letter-spacing:-1px; }
+.hero p { max-width:620px; margin:auto; color:#e5f1e9; }
+.actions { display:flex; justify-content:center; gap:12px; flex-wrap:wrap; margin-top:24px; }
+.btn {
+  border:0;
+  border-radius:9px;
+  padding:12px 17px;
+  font-weight:bold;
+  cursor:pointer;
+  text-decoration:none;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+.white { background:white; color:var(--deep); }
+.green { background:var(--green); color:white; }
+.outline { background:white; color:var(--deep); border:1px solid var(--border); }
+.notice-wrap { max-width:1000px; margin:20px auto; padding:0 16px; }
+.notice {
+  background:#fff9e8;
+  color:#634b13;
+  border:1px solid #f0dfaa;
+  border-radius:10px;
+  padding:13px 15px;
+  font-size:13px;
+}
+main { max-width:1120px; margin:auto; padding:28px 16px 55px; }
+.section { margin-top:32px; }
+.section:first-child { margin-top:0; }
+.heading {
+  display:flex;
+  justify-content:space-between;
+  align-items:end;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom:17px;
+}
+h2 { color:var(--deep); font-size:clamp(23px,4vw,30px); line-height:1.2; margin:0 0 6px; }
+.sub { margin:0; color:var(--muted); font-size:14px; }
+.status,.help { color:var(--muted); font-size:13px; }
+.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:17px; }
+.card {
+  background:white;
+  border:1px solid var(--border);
+  border-radius:15px;
+  overflow:hidden;
+  box-shadow:0 8px 26px #073b2a12;
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+}
+.card.selected { border:2px solid var(--green); }
+.photo {
+  height:205px;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  background:linear-gradient(135deg,#e8f3eb,#e7edf4);
+}
+.photo img { width:100%; height:100%; object-fit:cover; object-position:center 20%; }
+.initials { font-size:58px; font-weight:bold; color:#6c9180; }
+.party-label {
+  position:absolute;
+  bottom:10px;
+  left:10px;
+  background:#073b2aee;
+  color:white;
+  border-radius:6px;
+  padding:5px 9px;
+  font-size:11px;
+  font-weight:bold;
+  max-width:calc(100% - 20px);
+  overflow-wrap:anywhere;
+}
+.card-body { padding:15px; display:flex; flex-direction:column; flex:1; }
+.candidate-name { font-size:17px; font-weight:bold; line-height:1.35; margin:0 0 5px; overflow-wrap:anywhere; }
+.party { color:var(--muted); font-size:13px; margin:0 0 13px; }
+.choose { width:100%; margin-top:auto; }
+.selected-note { font-size:12px; color:var(--green); font-weight:bold; }
+.panel {
+  background:white;
+  border:1px solid var(--border);
+  border-radius:15px;
+  padding:20px;
+  box-shadow:0 8px 26px #073b2a0c;
+}
+.stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin-bottom:20px; }
+.stat { background:#f0f7f2; border-radius:10px; padding:14px; }
+.stat-label { color:var(--muted); font-size:12px; font-weight:bold; }
+.stat-value { color:var(--deep); font-size:25px; font-weight:bold; }
+.result-row { padding:15px 0; border-top:1px solid #edf1ed; }
+.result-top { display:flex; justify-content:space-between; gap:12px; margin-bottom:8px; }
+.result-name { font-size:14px; font-weight:bold; overflow-wrap:anywhere; }
+.result-votes { color:var(--muted); font-size:12px; }
+.percent { font-size:16px; font-weight:bold; color:var(--deep); white-space:nowrap; }
+.track { height:10px; background:#e9efea; border-radius:99px; overflow:hidden; }
+.fill { height:100%; background:linear-gradient(90deg,#087443,#17a667); border-radius:99px; }
+.selected-box {
+  border-radius:10px;
+  background:var(--light);
+  padding:14px;
+  margin:16px 0;
+  font-weight:bold;
+  color:var(--deep);
+  overflow-wrap:anywhere;
+}
+.turnstile-wrap { margin:16px 0; min-height:65px; overflow-x:auto; }
+.message {
+  display:none;
+  padding:12px 14px;
+  border-radius:9px;
+  margin:14px 0;
+  font-size:14px;
+  overflow-wrap:anywhere;
+}
+.message.show { display:block; }
+.error { background:#fff0ef; color:var(--danger); border:1px solid #f4c7c3; }
+.success { background:#e9f8ef; color:#126239; border:1px solid #b9e4c9; }
+.info { background:#edf4ff; color:#214f88; border:1px solid #c9ddfb; }
+.empty { background:white; border:1px dashed #cbd9cf; color:var(--muted); border-radius:12px; padding:22px; text-align:center; font-size:14px; }
+.loading { padding:22px; text-align:center; color:var(--muted); font-size:14px; }
+footer { background:#082f23; color:#e1eee5; padding:25px 16px; text-align:center; font-size:12px; }
+footer p { max-width:800px; margin:7px auto; }
+.footer-brand { color:white; font-weight:bold; font-size:17px; }
+
+@media(max-width:520px) {
+  .hero { padding:40px 17px; }
+  .brand { font-size:19px; }
+  .grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+  .photo { height:165px; }
+  .card-body { padding:11px; }
+  .candidate-name { font-size:15px; }
+  .party { font-size:12px; }
+  .choose { font-size:12px; padding:10px 7px; }
+  .panel { padding:15px; }
+}
+@media(max-width:350px) {
+  .grid { grid-template-columns:1fr; }
+  .photo { height:230px; }
+}
 </style>
 </head>
 
@@ -96,7 +220,9 @@ footer p{max-width:800px;margin:7px auto}.footer-brand{color:white;font-weight:b
 <header class="topbar">
   <div class="nav">
     <div class="brand">
-      <span class="flag" aria-label="Nigerian flag"><span class="g"></span><span class="w"></span><span class="g"></span></span>
+      <span class="flag" aria-label="Nigerian flag">
+        <span class="g"></span><span class="w"></span><span class="g"></span>
+      </span>
       <span>WhoYouChoose</span>
     </div>
     <a href="#results">View Results ↓</a>
@@ -116,48 +242,69 @@ footer p{max-width:800px;margin:7px auto}.footer-brand{color:white;font-weight:b
 </section>
 
 <div class="notice-wrap">
-  <div class="notice"><strong>Important:</strong> WhoYouChoose is an independent, unofficial public opinion poll. It is not affiliated with INEC or any political party and does not represent official election results. Online voting cannot guarantee one vote per person.</div>
+  <div class="notice">
+    <strong>Important:</strong> WhoYouChoose is an independent, unofficial public opinion poll. It is not affiliated with INEC or any political party and does not represent official election results. Online voting cannot guarantee one vote per person.
+  </div>
 </div>
 
 <main>
-<section class="section" id="candidates">
-  <div class="heading">
-    <div><h2>Meet the Candidates</h2><p class="sub">Select the candidate you would choose.</p></div>
-    <span class="status" id="candidate-count">Loading candidates…</span>
-  </div>
-  <div id="candidate-message" class="message" role="status"></div>
-  <div id="candidate-grid" class="grid"><div class="loading">Loading candidates…</div></div>
-</section>
-
-<section class="section" id="vote">
-  <div class="heading"><div><h2>Cast Your Opinion</h2><p class="sub">Choose a candidate and complete the security check.</p></div></div>
-  <div class="panel">
-    <p>Your selection:</p>
-    <div id="selected-candidate" class="selected-box">No candidate selected yet.</div>
-    <div id="vote-message" class="message" role="status" aria-live="polite"></div>
-    <div class="turnstile-wrap">
-      <div id="turnstile-widget"></div>
+  <section class="section" id="candidates">
+    <div class="heading">
+      <div>
+        <h2>Meet the Candidates</h2>
+        <p class="sub">Select the candidate you would choose.</p>
+      </div>
+      <span class="status" id="candidate-count">Loading candidates…</span>
     </div>
-    <button id="retry-turnstile" class="btn outline" type="button" hidden>↻ Retry security check</button>
-    <button id="submit-vote" class="btn green" type="button" disabled>Submit My Vote</button>
-    <p class="help">Please submit only your own genuine opinion.</p>
-  </div>
-</section>
-
-<section class="section" id="results">
-  <div class="heading">
-    <div><h2>Live Poll Results</h2><p class="sub">Results reflect recorded submissions to this website, not official election results.</p></div>
-    <button id="refresh-results" class="btn outline" type="button">↻ Refresh</button>
-  </div>
-  <div class="panel">
-    <div class="stats">
-      <div class="stat"><div class="stat-label">Total votes recorded</div><div class="stat-value" id="total-votes">—</div></div>
-      <div class="stat"><div class="stat-label">Candidates listed</div><div class="stat-value" id="result-candidate-count">—</div></div>
+    <div id="candidate-message" class="message" role="status"></div>
+    <div id="candidate-grid" class="grid">
+      <div class="loading">Loading candidates…</div>
     </div>
-    <div id="results-message" class="message" role="status"></div>
-    <div id="results-list"><div class="loading">Loading poll results…</div></div>
-  </div>
-</section>
+  </section>
+
+  <section class="section" id="vote">
+    <div class="heading">
+      <div>
+        <h2>Cast Your Opinion</h2>
+        <p class="sub">Choose a candidate and complete the security check.</p>
+      </div>
+    </div>
+    <div class="panel">
+      <p>Your selection:</p>
+      <div id="selected-candidate" class="selected-box">No candidate selected yet.</div>
+      <div id="vote-message" class="message" role="status" aria-live="polite"></div>
+      <div class="turnstile-wrap">
+        <div id="turnstile-widget"></div>
+      </div>
+      <button id="retry-turnstile" class="btn outline" type="button" hidden>↻ Retry security check</button>
+      <button id="submit-vote" class="btn green" type="button" disabled>Submit My Vote</button>
+      <p class="help">Please submit only your own genuine opinion.</p>
+    </div>
+  </section>
+
+  <section class="section" id="results">
+    <div class="heading">
+      <div>
+        <h2>Live Poll Results</h2>
+        <p class="sub">Results reflect recorded submissions to this website, not official election results.</p>
+      </div>
+      <button id="refresh-results" class="btn outline" type="button">↻ Refresh</button>
+    </div>
+    <div class="panel">
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-label">Total votes recorded</div>
+          <div class="stat-value" id="total-votes">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Candidates listed</div>
+          <div class="stat-value" id="result-candidate-count">—</div>
+        </div>
+      </div>
+      <div id="results-message" class="message" role="status"></div>
+      <div id="results-list"><div class="loading">Loading poll results…</div></div>
+    </div>
+  </section>
 </main>
 
 <footer>
@@ -172,10 +319,12 @@ footer p{max-width:800px;margin:7px auto}.footer-brand{color:white;font-weight:b
 
 const SUPABASE_URL = "https://dhznqadwkfcjqgoqbqyk.supabase.co";
 const SUPABASE_KEY = "sb_publishable_uDRIn91CPoWtBCDJ-Uh7SQ_3_nLU_lK";
-const EDGE_FUNCTION_URL = SUPABASE_URL + "/functions/v1/submit-vote-secure-v2";
+const EDGE_FUNCTION_URL =
+  SUPABASE_URL + "/functions/v1/submit-vote-secure-v2";
 
-// Candidate photos keyed by the exact candidate name from the database.
-// Images are openly licensed portraits served from Wikimedia Commons.
+// Use the site key from your NEW Cloudflare Turnstile widget.
+const TURNSTILE_SITE_KEY = "0x4AAAAAAFUarj88F31fABto";
+
 const COMMONS = "https://commons.wikimedia.org/wiki/Special:FilePath/";
 const candidatePhotos = {
   "Bola Ahmed Tinubu": COMMONS + "Bola_Tinubu_portrait.jpg?width=500",
@@ -189,8 +338,10 @@ let db = null;
 let candidates = [];
 let selectedCandidateId = null;
 let turnstileToken = "";
+let turnstileWidgetId = null;
 let isSubmitting = false;
 let voteSubmitted = false;
+let turnstileLoadFailed = false;
 
 const $ = id => document.getElementById(id);
 $("year").textContent = new Date().getFullYear();
@@ -199,10 +350,12 @@ function message(id, text, type = "info") {
   $(id).textContent = text;
   $(id).className = "message show " + type;
 }
+
 function clearMessage(id) {
   $(id).textContent = "";
   $(id).className = "message";
 }
+
 function firstValue(row, keys, fallback = null) {
   if (!row || typeof row !== "object") return fallback;
   for (const key of keys) {
@@ -212,23 +365,41 @@ function firstValue(row, keys, fallback = null) {
   }
   return fallback;
 }
+
 function getCandidateId(row) {
-  // Names are a display fallback only. Voting requires the real database ID.
-  return firstValue(row, ["candidate_id", "id", "candidateId", "candidate_uuid"], null);
+  return firstValue(
+    row,
+    ["candidate_id", "id", "candidateId", "candidate_uuid"],
+    null
+  );
 }
+
 function getCandidateName(row) {
-  return String(firstValue(row, ["candidate_name", "name", "full_name", "candidate"], "Unnamed candidate"));
+  return String(
+    firstValue(row, ["candidate_name", "name", "full_name", "candidate"], "Unnamed candidate")
+  );
 }
+
 function getCandidateParty(row) {
-  return String(firstValue(row, [
-    "party_name", "party", "party_acronym", "party_abbreviation",
-    "party_name_abbreviation", "party_code"
-  ], "Party not listed"));
+  return String(
+    firstValue(row, [
+      "party_name",
+      "party",
+      "party_acronym",
+      "party_abbreviation",
+      "party_name_abbreviation",
+      "party_code"
+    ], "Party not listed")
+  );
 }
+
 function getVotes(row) {
-  const n = Number(firstValue(row, ["votes", "vote_count", "total_votes", "count", "votes_count"], 0));
-  return Number.isFinite(n) && n >= 0 ? n : 0;
+  const value = Number(
+    firstValue(row, ["votes", "vote_count", "total_votes", "count", "votes_count"], 0)
+  );
+  return Number.isFinite(value) && value >= 0 ? value : 0;
 }
+
 function normalizeRows(data) {
   if (Array.isArray(data)) return data;
   if (data && Array.isArray(data.data)) return data.data;
@@ -236,57 +407,89 @@ function normalizeRows(data) {
   if (data && Array.isArray(data.results)) return data.results;
   return [];
 }
+
 function initials(name) {
-  return name.trim().split(/\s+/).slice(0, 2).map(x => x[0]).join("").toUpperCase() || "?";
+  return name.trim().split(/\s+/).slice(0, 2)
+    .map(part => part[0]).join("").toUpperCase() || "?";
 }
+
 function safeImage(url) {
   try {
-    const u = new URL(url);
-    return u.protocol === "https:" || u.protocol === "http:";
-  } catch (_) { return false; }
+    const parsed = new URL(url);
+    return parsed.protocol === "https:" || parsed.protocol === "http:";
+  } catch (_) {
+    return false;
+  }
 }
+
 function photoFor(name, row) {
-  const fromRow = firstValue(row, ["photo_url", "image_url", "candidate_photo", "photo", "image"], "");
+  const fromRow = firstValue(
+    row,
+    ["photo_url", "image_url", "candidate_photo", "photo", "image"],
+    ""
+  );
+
   if (fromRow && safeImage(String(fromRow))) return String(fromRow);
-  return candidatePhotos[name] && safeImage(candidatePhotos[name]) ? candidatePhotos[name] : "";
+  return candidatePhotos[name] && safeImage(candidatePhotos[name])
+    ? candidatePhotos[name]
+    : "";
 }
+
 function updateButton() {
   const button = $("submit-vote");
-  const hasRealId = candidates.some(row =>
+
+  const selectedRow = candidates.find(row =>
     String(getCandidateId(row)) === String(selectedCandidateId) &&
     getCandidateId(row) !== null
   );
-  button.disabled = !selectedCandidateId || !hasRealId ||
-    !turnstileToken || isSubmitting || voteSubmitted;
 
-  if (isSubmitting) button.textContent = "Submitting vote…";
-  else if (voteSubmitted) button.textContent = "Vote submitted";
-  else button.textContent = "Submit My Vote";
+  button.disabled = !selectedRow ||
+    !turnstileToken ||
+    isSubmitting ||
+    voteSubmitted;
+
+  if (isSubmitting) {
+    button.textContent = "Submitting vote…";
+  } else if (voteSubmitted) {
+    button.textContent = "Vote submitted";
+  } else {
+    button.textContent = "Submit My Vote";
+  }
 }
 
 function selectCandidate(id) {
   if (voteSubmitted || isSubmitting) return;
-  selectedCandidateId = id;
 
-  const row = candidates.find(c => String(getCandidateId(c)) === String(id));
-  if (row) {
-    $("selected-candidate").textContent = getCandidateName(row) + " — " + getCandidateParty(row);
+  const row = candidates.find(candidate =>
+    String(getCandidateId(candidate)) === String(id)
+  );
+
+  if (!row || getCandidateId(row) === null) {
+    message(
+      "vote-message",
+      "This candidate does not have a usable database ID. Voting is disabled until the database returns the candidate's ID.",
+      "error"
+    );
+    return;
   }
+
+  selectedCandidateId = getCandidateId(row);
+
+  $("selected-candidate").textContent =
+    getCandidateName(row) + " — " + getCandidateParty(row);
+
   document.querySelectorAll(".card").forEach(card => {
-    const selected = card.dataset.key === String(id);
+    const selected = card.dataset.key === String(selectedCandidateId);
     card.classList.toggle("selected", selected);
-    const btn = card.querySelector(".choose");
-    if (btn) btn.textContent = selected ? "✓ Selected" : "Choose Candidate";
+
+    const button = card.querySelector(".choose");
+    if (button) button.textContent = selected ? "✓ Selected" : "Choose Candidate";
+
     const note = card.querySelector(".selected-note");
     if (note) note.textContent = selected ? "Your current selection" : "";
   });
 
-  const chosen = candidates.find(c => String(getCandidateId(c)) === String(id));
-  if (chosen && getCandidateId(chosen) == null) {
-    message("vote-message", "This candidate record has no database ID yet. The candidate can be displayed, but voting is disabled until the database returns its real candidate ID.", "info");
-  } else {
-    clearMessage("vote-message");
-  }
+  clearMessage("vote-message");
   updateButton();
 }
 
@@ -294,26 +497,32 @@ function renderCandidates() {
   const grid = $("candidate-grid");
   grid.replaceChildren();
 
-  $("candidate-count").textContent = candidates.length + " candidate" + (candidates.length === 1 ? "" : "s");
+  $("candidate-count").textContent =
+    candidates.length + " candidate" + (candidates.length === 1 ? "" : "s");
+
   $("result-candidate-count").textContent = candidates.length;
 
   if (!candidates.length) {
-    grid.innerHTML = '<div class="empty">No candidate records were returned. Check the get_poll_candidates function.</div>';
+    grid.innerHTML =
+      '<div class="empty">No candidate records were returned. Check the get_poll_candidates function.</div>';
     message("candidate-message", "The database returned no candidate rows.", "error");
     return;
   }
+
   clearMessage("candidate-message");
 
   candidates.forEach(row => {
     const name = getCandidateName(row);
     const party = getCandidateParty(row);
     const id = getCandidateId(row);
+
     const card = document.createElement("article");
     card.className = "card";
     card.dataset.key = String(id === null ? name : id);
 
     const photo = document.createElement("div");
     photo.className = "photo";
+
     const url = photoFor(name, row);
 
     if (url) {
@@ -322,11 +531,11 @@ function renderCandidates() {
       img.alt = name;
       img.loading = "lazy";
       img.onerror = () => {
-        photo.replaceChildren();
+        img.remove();
         const mark = document.createElement("div");
         mark.className = "initials";
         mark.textContent = initials(name);
-        photo.appendChild(mark);
+        photo.prepend(mark);
       };
       photo.appendChild(img);
     } else {
@@ -352,31 +561,34 @@ function renderCandidates() {
     partyText.className = "party";
     partyText.textContent = party;
 
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "btn green choose";
-    btn.textContent = "Choose Candidate";
-    btn.disabled = voteSubmitted;
-    btn.addEventListener("click", () => selectCandidate(id === null ? name : id));
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "btn green choose";
+    button.textContent = "Choose Candidate";
+    button.disabled = voteSubmitted || id === null;
+    button.addEventListener("click", () => selectCandidate(id));
 
     const note = document.createElement("p");
     note.className = "selected-note";
     note.textContent = "";
 
-    body.append(title, partyText, btn, note);
+    body.append(title, partyText, button, note);
     card.append(photo, body);
     grid.appendChild(card);
   });
 }
 
 async function loadCandidates() {
-  $("candidate-grid").innerHTML = '<div class="loading">Loading candidates…</div>';
+  $("candidate-grid").innerHTML =
+    '<div class="loading">Loading candidates…</div>';
   clearMessage("candidate-message");
 
-  const {data, error} = await db.rpc("get_poll_candidates");
+  const { data, error } = await db.rpc("get_poll_candidates");
+
   if (error) {
     console.error("Candidate query failed:", error);
-    $("candidate-grid").innerHTML = '<div class="empty">Candidates could not be loaded. Please refresh.</div>';
+    $("candidate-grid").innerHTML =
+      '<div class="empty">Candidates could not be loaded. Please refresh.</div>';
     message("candidate-message", "Candidate query failed: " + error.message, "error");
     $("candidate-count").textContent = "Unavailable";
     return;
@@ -387,14 +599,17 @@ async function loadCandidates() {
 }
 
 async function loadResults() {
-  $("results-list").innerHTML = '<div class="loading">Loading poll results…</div>';
+  $("results-list").innerHTML =
+    '<div class="loading">Loading poll results…</div>';
   clearMessage("results-message");
 
-  const {data, error} = await db.rpc("get_poll_results");
+  const { data, error } = await db.rpc("get_poll_results");
+
   if (error) {
     console.error("Results query failed:", error);
     $("total-votes").textContent = "—";
-    $("results-list").innerHTML = '<div class="empty">Results could not be loaded.</div>';
+    $("results-list").innerHTML =
+      '<div class="empty">Results could not be loaded.</div>';
     message("results-message", "Results query failed: " + error.message, "error");
     return;
   }
@@ -412,289 +627,21 @@ async function loadResults() {
   }
 
   rows.sort((a, b) => getVotes(b) - getVotes(a));
+
   rows.forEach(row => {
     const name = getCandidateName(row);
     const party = getCandidateParty(row);
     const votes = getVotes(row);
-    const suppliedPercent = firstValue(row, ["percentage", "vote_percentage", "percent", "percentage_of_votes"], null);
-    const percent = suppliedPercent !== null
-      ? Math.max(0, Math.min(100, Number(suppliedPercent) || 0))
-      : total > 0 ? votes / total * 100 : 0;
 
-    const item = document.createElement("div");
-    item.className = "result-row";
-
-    const top = document.createElement("div");
-    top.className = "result-top";
-
-    const left = document.createElement("div");
-    const title = document.createElement("div");
-    title.className = "result-name";
-    title.textContent = name;
-
-    const detail = document.createElement("div");
-    detail.className = "result-votes";
-    detail.textContent = party + " · " + votes.toLocaleString() + " votes";
-    left.append(title, detail);
-
-    const pct = document.createElement("div");
-    pct.className = "percent";
-    pct.textContent = percent.toFixed(1) + "%";
-    top.append(left, pct);
-
-    const track = document.createElement("div");
-    track.className = "track";
-    const fill = document.createElement("div");
-    fill.className = "fill";
-    fill.style.width = percent + "%";
-    track.appendChild(fill);
-
-    item.append(top, track);
-    list.appendChild(item);
-  });
-}
-
-const TURNSTILE_SITE_KEY = "0x4AAAAAAFUXWBnZ1fURYC7c";
-let turnstileWidgetId = null;
-let turnstileLoaded = false;
-
-// Explain Turnstile error codes in plain language.
-// See https://developers.cloudflare.com/turnstile/troubleshooting/client-side-errors/error-codes/
-function turnstileErrorText(code) {
-  const c = String(code || "");
-  if (c === "110200") return "The security check is not enabled for this website address (" + location.hostname + "). The site owner needs to add it to the Turnstile widget's allowed domains in Cloudflare.";
-  if (c.startsWith("1101")) return "The security check is misconfigured (invalid site key). Please contact the site owner.";
-  if (c === "110500") return "Your browser is not supported by the security check. Please update it or try another browser.";
-  if (c.startsWith("1106") || c.startsWith("102") || c.startsWith("103") || c.startsWith("104") || c.startsWith("106") || c.startsWith("300") || c.startsWith("600")) return "The security check could not verify your browser. Please retry, or try disabling VPNs/ad blockers.";
-  return "The security check could not load. Check your connection and retry.";
-}
-
-function showTurnstileRetry(show) {
-  $("retry-turnstile").hidden = !show;
-}
-
-function renderTurnstile() {
-  if (!window.turnstile) return;
-  showTurnstileRetry(false);
-  turnstileToken = "";
-  updateButton();
-  if (turnstileWidgetId !== null) {
-    window.turnstile.reset(turnstileWidgetId);
-    return;
-  }
-  turnstileWidgetId = window.turnstile.render("#turnstile-widget", {
-    sitekey: TURNSTILE_SITE_KEY,
-    theme: "light",
-    "retry": "auto",
-    "refresh-expired": "auto",
-    callback: window.onTurnstileSuccess,
-    "expired-callback": window.onTurnstileExpired,
-    "error-callback": window.onTurnstileError
-  });
-}
-
-function resetTurnstile() {
-  turnstileToken = "";
-  if (window.turnstile && turnstileWidgetId !== null) {
-    try { window.turnstile.reset(turnstileWidgetId); }
-    catch (resetError) { console.error("Turnstile reset failed:", resetError); }
-  }
-}
-
-window.onTurnstileLoad = function() {
-  turnstileLoaded = true;
-  renderTurnstile();
-};
-window.onTurnstileScriptError = function() {
-  message("vote-message", "The security check could not be downloaded. Check your connection or ad blocker, then refresh the page.", "error");
-};
-// The async Turnstile script may finish before this script defines onTurnstileLoad.
-if (window.turnstile) window.onTurnstileLoad();
-setTimeout(() => {
-  if (!turnstileLoaded && window.turnstile) window.onTurnstileLoad();
-  else if (!turnstileLoaded) window.onTurnstileScriptError();
-}, 15000);
-
-window.onTurnstileSuccess = function(token) {
-  turnstileToken = token || "";
-  clearMessage("vote-message");
-  updateButton();
-};
-window.onTurnstileExpired = function() {
-  turnstileToken = "";
-  updateButton();
-  message("vote-message", "The security check expired. Please complete it again.", "error");
-};
-window.onTurnstileError = function(code) {
-  console.error("Turnstile error code:", code);
-  turnstileToken = "";
-  updateButton();
-  message("vote-message", turnstileErrorText(code), "error");
-  showTurnstileRetry(true);
-  // Returning true tells Turnstile the error was handled.
-  return true;
-};
-
-async function submitVote() {
-  
-  if (isSubmitting || voteSubmitted) return;
-
-  const chosen = candidates.find(
-    row => String(getCandidateId(row)) === String(selectedCandidateId)
-  );
-
-  if (!chosen || getCandidateId(chosen) == null) {
-    message("vote-message", "Please select a valid candidate and try again.", "error");
-    return;
-  }
-
-  if (!turnstileToken) {
-    message("vote-message", "Please complete the security check before voting.", "error");
-    return;
-  }
-
-  isSubmitting = true;
-  updateButton();
-  clearMessage("vote-message");
-
-  try {
-    const candidateId = getCandidateId(chosen);
-
-    let response;
-    try {
-      response = await fetch(EDGE_FUNCTION_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "apikey": SUPABASE_KEY,
-          "Authorization": "Bearer " + SUPABASE_KEY
-        },
-        body: JSON.stringify({
-          candidate_id: candidateId,
-          candidateId: candidateId,
-          candidate: candidateId,
-          turnstileToken: turnstileToken,
-          turnstile_token: turnstileToken
-        })
-      });
-    } catch (networkError) {
-      // A blocked CORS preflight (e.g. this domain missing from the function's
-      // allowed origins) surfaces as a generic network error.
-      throw new Error("Could not reach the voting server. Please check your connection and try again.");
-    }
-
-    const responseText = await response.text();
-    let result = {};
-
-    try {
-      result = responseText ? JSON.parse(responseText) : {};
-    } catch (_) {
-      result = { message: responseText };
-    }
-
-    if (response.status === 403 && /origin/i.test(result.error || "")) {
-      throw new Error("Voting is temporarily unavailable on this website address. Please try again later.");
-    }
-
-    if (!response.ok || result.success === false) {
-      throw new Error(
-        result.error ||
-        result.message ||
-        "The server could not record your vote. Please try again."
-      );
-    }
-
-    voteSubmitted = true;
-    turnstileToken = "";
-
-    message(
-      "vote-message",
-      result.message || "Your vote has been submitted successfully. Thank you for participating!",
-      "success"
+    const suppliedPercent = firstValue(
+      row,
+      ["percentage", "vote_percentage", "percent", "percentage_of_votes"],
+      null
     );
 
-    document.querySelectorAll(".choose").forEach(button => {
-      button.disabled = true;
-    });
+    const parsedPercent = suppliedPercent === null
+      ? null
+      : Number(suppliedPercent);
 
-    updateButton();
-
-    try {
-      await loadResults();
-    } catch (refreshError) {
-      console.error("Results refresh failed:", refreshError);
-    }
-
-  } catch (error) {
-    console.error("Vote submission failed:", error);
-
-    message(
-      "vote-message",
-      error.message || "Your vote could not be submitted. Please try again.",
-      "error"
-    );
-
-    resetTurnstile();
-
-  } finally {
-    isSubmitting = false;
-    updateButton();
-  }
-}
-
-$("submit-vote").addEventListener("click", submitVote);
-$("retry-turnstile").addEventListener("click", () => {
-  clearMessage("vote-message");
-  renderTurnstile();
-});
-
-$("refresh-results").addEventListener("click", async () => {
-  const button = $("refresh-results");
-  button.disabled = true;
-  button.textContent = "Refreshing…";
-
-  try {
-    await loadResults();
-  } catch (error) {
-    console.error("Results refresh failed:", error);
-    message("results-message", "Could not refresh results. Please try again.", "error");
-  } finally {
-    button.disabled = false;
-    button.textContent = "↻ Refresh";
-  }
-});
-
-async function initializeApp() {
-  try {
-    if (!window.supabase || typeof window.supabase.createClient !== "function") {
-      throw new Error("The Supabase library did not load. Please refresh the page.");
-    }
-
-    db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    await Promise.all([
-      loadCandidates(),
-      loadResults()
-    ]);
-
-  } catch (error) {
-    console.error("Application initialization failed:", error);
-
-    message(
-      "candidate-message",
-      error.message || "The website could not connect to the database.",
-      "error"
-    );
-
-    message(
-      "results-message",
-      "The application could not initialize. Please refresh the page.",
-      "error"
-    );
-  }
-}
-
-initializeApp();
-</script>
-</body>
-</html>
+    const percent = parsedPercent !== null && Number.isFinite(parsedPercent)
+      ? Math.max(0, Math.min(100, parsedPe
