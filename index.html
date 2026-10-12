@@ -598,50 +598,429 @@ async function loadCandidates() {
   renderCandidates();
 }
 
+
 async function loadResults() {
   $("results-list").innerHTML =
     '<div class="loading">Loading poll results…</div>';
   clearMessage("results-message");
 
-  const { data, error } = await db.rpc("get_poll_results");
+  try {
+    const { data, error } = await db.rpc("get_poll_results");
+    if (error) throw error;
 
-  if (error) {
+    const rows = normalizeRows(data);
+    const total = rows.reduce((sum, row) => sum + getVotes(row), 0);
+    $("total-votes").textContent = total.toLocaleString();
+
+    const list = $("results-list");
+    list.replaceChildren();
+
+    if (!rows.length) {
+      list.innerHTML =
+        '<div class="empty">No result rows were returned by get_poll_results.</div>';
+      return;
+    }
+
+    rows.sort((a, b) => getVotes(b) - getVotes(a));
+
+    rows.forEach(row => {
+      const name = getCandidateName(row);
+      const party = getCandidateParty(row);
+      const votes = getVotes(row);
+
+      const suppliedPercent = firstValue(
+        row,
+        ["percentage", "vote_percentage", "percent", "percentage_of_votes"],
+        null
+      );
+
+      const parsedPercent =
+        suppliedPercent === null ? null : Number(suppliedPercent);
+
+      const percent =
+        parsedPercent !== null && Number.isFinite(parsedPercent)
+          ? Math.max(0, Math.min(100, parsedPercent))
+          : total > 0
+            ? (votes / total) * 100
+            : 0;
+
+      const item = document.createElement("div");
+      item.className = "result-row";
+
+      const top = document.createElement("div");
+      top.className = "result-top";
+
+      const left = document.createElement("div");
+
+      const title = document.createElement("div");
+      title.className = "result-name";
+      title.textContent = name;
+
+      const partyLabel = document.createElement("div");
+      partyLabel.className = "result-votes";
+      partyLabel.textContent =
+        party + " · " + votes.toLocaleString() +
+        " vote" + (votes === 1 ? "" : "s");
+
+      left.append(title, partyLabel);
+
+      const percentage = document.createElement("div");
+      percentage.className = "percent";
+      percentage.textContent = percent.toFixed(1) + "%";
+
+      top.append(left, percentage);
+
+      const track = document.createElement("div");
+      track.className = "track";
+
+      const fill = document.createElement("div");
+      fill.className = "fill";
+      fill.style.width = percent + "%";
+
+      track.appendChild(fill);
+      item.append(top, track);
+      list.appendChild(item);
+    });
+
+    clearMessage("results-message");
+  } catch (error) {
     console.error("Results query failed:", error);
     $("total-votes").textContent = "—";
     $("results-list").innerHTML =
-      '<div class="empty">Results could not be loaded.</div>';
-    message("results-message", "Results query failed: " + error.message, "error");
+      '<div class="empty">Results could not be loaded. Use Refresh to retry.</div>';
+    message(
+      "results-message",
+      "Results query failed: " + (error?.message || "Unknown error"),
+      "error"
+    );
+  }
+}
+
+async function loadCandidates() {
+  $("candidate-grid").innerHTML =
+    '<div class="loading">Loading candidates…</div>';
+  clearMessage("candidate-message");
+  $("candidate-count").textContent = "Loading…";
+
+  try {
+    const { data, error } = await db.rpc("get_poll_candidates");
+    if (error) throw error;
+
+    candidates = normalizeRows(data);
+    renderCandidates();
+
+    if (!candidates.length) {
+      showCandidateRetry(
+        "No active candidates were returned by get_poll_candidates."
+      );
+    }
+  } catch (error) {
+    console.error("Candidate query failed:", error);
+    candidates = [];
+
+    $("candidate-grid").innerHTML =
+      '<div class="empty">Candidates could not be loaded. Please retry.</div>';
+
+    $("candidate-count").textContent = "Unavailable";
+
+    showCandidateRetry(
+      "Candidate query failed: " + (error?.message || "Unknown error")
+    );
+  }
+}
+
+function showCandidateRetry(text) {
+  message("candidate-message", text, "error");
+
+  const retry = document.createElement("button");
+  retry.type = "button";
+  retry.className = "btn outline";
+  retry.style.marginTop = "8px";
+  retry.textContent = "↻ Retry candidates";
+  retry.addEventListener("click", loadCandidates);
+
+  $("candidate-message").appendChild(
+    document.createTextNode(" ")
+  );
+  $("candidate-message").appendChild(retry);
+}
+
+async function submitVote() {
+  if (isSubmitting || voteSubmitted) return;
+
+  const selectedRow = candidates.find(row =>
+    String(getCandidateId(row)) === String(selectedCandidateId) &&
+    getCandidateId(row) !== null
+  );
+
+  if (!selectedRow) {
+    message("vote-message", "Please choose a candidate first.", "error");
     return;
   }
 
-  const rows = normalizeRows(data);
-  const total = rows.reduce((sum, row) => sum + getVotes(row), 0);
-  $("total-votes").textContent = total.toLocaleString();
-
-  const list = $("results-list");
-  list.replaceChildren();
-
-  if (!rows.length) {
-    list.innerHTML = '<div class="empty">No result rows were returned.</div>';
+  if (!turnstileToken) {
+    message(
+      "vote-message",
+      "Please complete the Cloudflare security check first.",
+      "error"
+    );
     return;
   }
 
-  rows.sort((a, b) => getVotes(b) - getVotes(a));
+  isSubmitting = true;
+  updateButton();
+  clearMessage("vote-message");
 
-  rows.forEach(row => {
-    const name = getCandidateName(row);
-    const party = getCandidateParty(row);
-    const votes = getVotes(row);
+  try {
+    const response = await fetch(EDGE_FUNCTION_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": SUPABASE_KEY,
+        "Authorization": "Bearer " + SUPABASE_KEY
+      },
+      body: JSON.stringify({
+        candidate: getCandidateName(selectedRow),
+        turnstileToken: turnstileToken
+      })
+    });
 
-    const suppliedPercent = firstValue(
-      row,
-      ["percentage", "vote_percentage", "percent", "percentage_of_votes"],
-      null
+    let result = {};
+    try {
+      result = await response.json();
+    } catch (_) {}
+
+    if (
+      !response.ok ||
+      result.success === false ||
+      result.error
+    ) {
+      throw new Error(
+        result.error ||
+        result.message ||
+        ("Vote submission failed (HTTP " + response.status + ").")
+      );
+    }
+
+    voteSubmitted = true;
+
+    message(
+      "vote-message",
+      result.message || "Your opinion has been recorded. Thank you.",
+      "success"
     );
 
-    const parsedPercent = suppliedPercent === null
-      ? null
-      : Number(suppliedPercent);
+    document.querySelectorAll(".choose").forEach(button => {
+      button.disabled = true;
+    });
 
-    const percent = parsedPercent !== null && Number.isFinite(parsedPercent)
-      ? Math.max(0, Math.min(100, parsedPe
+    turnstileToken = "";
+    resetTurnstile();
+    updateButton();
+
+    await loadResults();
+  } catch (error) {
+    console.error("Vote submission failed:", error);
+
+    message(
+      "vote-message",
+      error?.message || "Vote submission failed. Please try again.",
+      "error"
+    );
+
+    turnstileToken = "";
+    resetTurnstile();
+  } finally {
+    isSubmitting = false;
+    updateButton();
+  }
+}
+
+function resetTurnstile() {
+  if (window.turnstile && turnstileWidgetId !== null) {
+    try {
+      window.turnstile.reset(turnstileWidgetId);
+    } catch (error) {
+      console.warn("Could not reset Turnstile:", error);
+    }
+  }
+}
+
+function initializeTurnstile() {
+  if (
+    !window.turnstile ||
+    typeof window.turnstile.render !== "function"
+  ) {
+    message(
+      "vote-message",
+      "Cloudflare security check did not load. Browsing remains available, but voting is disabled.",
+      "error"
+    );
+    $("retry-turnstile").hidden = false;
+    updateButton();
+    return;
+  }
+
+  if (turnstileWidgetId !== null) {
+    try {
+      window.turnstile.remove(turnstileWidgetId);
+    } catch (_) {}
+    turnstileWidgetId = null;
+  }
+
+  try {
+    turnstileWidgetId = window.turnstile.render(
+      "#turnstile-widget",
+      {
+        sitekey: TURNSTILE_SITE_KEY,
+
+        callback: token => {
+          turnstileToken = token || "";
+          clearMessage("vote-message");
+          updateButton();
+        },
+
+        "expired-callback": () => {
+          turnstileToken = "";
+          updateButton();
+          message(
+            "vote-message",
+            "Security check expired. Please complete it again.",
+            "info"
+          );
+        },
+
+        "error-callback": () => {
+          turnstileToken = "";
+          updateButton();
+
+          message(
+            "vote-message",
+            "Cloudflare verification failed. Check the site key and allowed hostnames.",
+            "error"
+          );
+
+          $("retry-turnstile").hidden = false;
+        },
+
+        theme: "light"
+      }
+    );
+
+    $("retry-turnstile").hidden = true;
+  } catch (error) {
+    console.error("Turnstile initialization failed:", error);
+
+    message(
+      "vote-message",
+      "Could not initialize Cloudflare Turnstile. Check the site key and allowed hostname.",
+      "error"
+    );
+
+    $("retry-turnstile").hidden = false;
+  }
+
+  updateButton();
+}
+
+window.onTurnstileLoad = initializeTurnstile;
+
+function loadTurnstileScript() {
+  if (window.turnstile) {
+    initializeTurnstile();
+    return;
+  }
+
+  if (document.getElementById("cloudflare-turnstile-script")) return;
+
+  const script = document.createElement("script");
+  script.id = "cloudflare-turnstile-script";
+  script.src =
+    "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileLoad";
+  script.async = true;
+  script.defer = true;
+
+  script.onerror = () => {
+    console.error("Cloudflare Turnstile script failed to load.");
+
+    message(
+      "vote-message",
+      "Cloudflare could not load. Candidates and results can still load, but voting remains disabled.",
+      "error"
+    );
+
+    $("retry-turnstile").hidden = false;
+  };
+
+  document.head.appendChild(script);
+}
+
+function initializeDatabase() {
+  if (
+    !window.supabase ||
+    typeof window.supabase.createClient !== "function"
+  ) {
+    throw new Error(
+      "The Supabase JavaScript library did not load. Check your internet connection."
+    );
+  }
+
+  db = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+}
+
+$("refresh-results").addEventListener("click", loadResults);
+$("submit-vote").addEventListener("click", submitVote);
+
+$("retry-turnstile").addEventListener("click", () => {
+  $("retry-turnstile").hidden = true;
+  loadTurnstileScript();
+});
+
+window.addEventListener("online", () => {
+  if (!db) return;
+  loadCandidates();
+  loadResults();
+});
+
+(async function startApp() {
+  try {
+    initializeDatabase();
+
+    // These requests run independently of Cloudflare initialization.
+    await Promise.allSettled([
+      loadCandidates(),
+      loadResults()
+    ]);
+  } catch (error) {
+    console.error("Website initialization failed:", error);
+
+    $("candidate-grid").innerHTML =
+      '<div class="empty">The database client could not start. Please refresh.</div>';
+
+    $("candidate-count").textContent = "Unavailable";
+
+    message(
+      "candidate-message",
+      error?.message || "Database initialization failed.",
+      "error"
+    );
+
+    $("results-list").innerHTML =
+      '<div class="empty">Poll results could not be loaded.</div>';
+
+    message(
+      "results-message",
+      error?.message || "Database initialization failed.",
+      "error"
+    );
+  } finally {
+    // Turnstile is deliberately initialized separately from data loading.
+    loadTurnstileScript();
+  }
+})();
+</script>
+</body>
+</html>
