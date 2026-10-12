@@ -467,4 +467,156 @@ window.onTurnstileError = function() {
 };
 
 async function submitVote() {
-  if (isSubmitting |
+  
+  if (isSubmitting || voteSubmitted) return;
+
+  const chosen = candidates.find(
+    row => String(getCandidateId(row)) === String(selectedCandidateId)
+  );
+
+  if (!chosen || getCandidateId(chosen) == null) {
+    message("vote-message", "Please select a valid candidate and try again.", "error");
+    return;
+  }
+
+  if (!turnstileToken) {
+    message("vote-message", "Please complete the security check before voting.", "error");
+    return;
+  }
+
+  isSubmitting = true;
+  updateButton();
+  clearMessage("vote-message");
+
+  try {
+    const candidateId = getCandidateId(chosen);
+
+    const response = await fetch(EDGE_FUNCTION_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": SUPABASE_KEY,
+        "Authorization": "Bearer " + SUPABASE_KEY
+      },
+      body: JSON.stringify({
+        candidate_id: candidateId,
+        candidateId: candidateId,
+        candidate: candidateId,
+        turnstileToken: turnstileToken,
+        turnstile_token: turnstileToken
+      })
+    });
+
+    const responseText = await response.text();
+    let result = {};
+
+    try {
+      result = responseText ? JSON.parse(responseText) : {};
+    } catch (_) {
+      result = { message: responseText };
+    }
+
+    if (!response.ok || result.success === false) {
+      throw new Error(
+        result.error ||
+        result.message ||
+        "The server could not record your vote. Please try again."
+      );
+    }
+
+    voteSubmitted = true;
+    turnstileToken = "";
+
+    message(
+      "vote-message",
+      result.message || "Your vote has been submitted successfully. Thank you for participating!",
+      "success"
+    );
+
+    document.querySelectorAll(".choose").forEach(button => {
+      button.disabled = true;
+    });
+
+    updateButton();
+
+    try {
+      await loadResults();
+    } catch (refreshError) {
+      console.error("Results refresh failed:", refreshError);
+    }
+
+  } catch (error) {
+    console.error("Vote submission failed:", error);
+
+    message(
+      "vote-message",
+      error.message || "Your vote could not be submitted. Please try again.",
+      "error"
+    );
+
+    turnstileToken = "";
+
+    if (window.turnstile && typeof window.turnstile.reset === "function") {
+      try {
+        window.turnstile.reset();
+      } catch (resetError) {
+        console.error("Turnstile reset failed:", resetError);
+      }
+    }
+
+  } finally {
+    isSubmitting = false;
+    updateButton();
+  }
+}
+
+$("submit-vote").addEventListener("click", submitVote);
+
+$("refresh-results").addEventListener("click", async () => {
+  const button = $("refresh-results");
+  button.disabled = true;
+  button.textContent = "Refreshing…";
+
+  try {
+    await loadResults();
+  } catch (error) {
+    console.error("Results refresh failed:", error);
+    message("results-message", "Could not refresh results. Please try again.", "error");
+  } finally {
+    button.disabled = false;
+    button.textContent = "↻ Refresh";
+  }
+});
+
+async function initializeApp() {
+  try {
+    if (!window.supabase || typeof window.supabase.createClient !== "function") {
+      throw new Error("The Supabase library did not load. Please refresh the page.");
+    }
+
+    db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    await Promise.all([
+      loadCandidates(),
+      loadResults()
+    ]);
+
+  } catch (error) {
+    console.error("Application initialization failed:", error);
+
+    message(
+      "candidate-message",
+      error.message || "The website could not connect to the database.",
+      "error"
+    );
+
+    message(
+      "results-message",
+      "The application could not initialize. Please refresh the page.",
+      "error"
+    );
+  }
+}
+
+initializeApp();
+  
