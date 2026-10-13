@@ -1,0 +1,1029 @@
+WHOYOUCHOOSE | NIGERIA DECIDES 2027 — MASTER WEBSITE UPGRADE PROMPT
+
+1. Project overview
+
+Upgrade my existing website, WhoYouChoose | Nigeria Decides 2027, currently hosted at:
+
+https://whoyouchoose.netlify.app/
+
+Use my existing HTML, CSS, and JavaScript code as the foundation. Do not discard the project or build an unrelated website from scratch.
+
+My goal is to improve the user experience, encourage more Nigerians to participate, make the results dashboard clearer, and add interactive civic-engagement features while preserving the existing working voting system.
+
+IMPORTANT: Read and understand the entire source code I provide after this prompt before making changes. Return the complete, corrected, working website code—not snippets, patches, or instructions telling me to fill in missing sections.
+
+If the supplied source code ends abruptly or is incomplete, identify the missing portion and reconstruct it carefully. Do not invent backend behavior or pretend you have verified something that you have not.
+
+2. Existing technical setup
+
+The website currently uses:
+
+- HTML, CSS, and vanilla JavaScript.
+- Supabase as the database and backend.
+- Existing Supabase project URL and publishable frontend key contained in my source code.
+- Existing Supabase RPC function "get_poll_candidates" to load candidates.
+- Existing Supabase RPC function "get_poll_results" to load results.
+- Existing Supabase Edge Function "submit-vote-secure-v2" to submit votes securely.
+- Cloudflare Turnstile for bot protection.
+- Existing candidate cards, candidate selection, voting, and results functionality.
+- Netlify for hosting.
+
+The Supabase project reference is "dhznqadwkfcjqgoqbqyk".
+
+The correct results RPC name is "get_poll_results". If you see the misspelling "get_poll_redsults", correct it to "get_poll_results".
+
+Keep the existing Supabase URL, publishable key, Turnstile site key, and Edge Function URL configuration working. Do not ask me to expose secret credentials.
+
+3. Critical security and data-preservation rules
+
+These requirements are mandatory.
+
+1. Preserve all existing candidate records and recorded votes.
+2. Never reset, truncate, delete, or overwrite my Supabase database.
+3. Never disable Row Level Security (RLS).
+4. Never expose a Supabase service-role key, Turnstile secret, password, or other server-side secret in frontend code.
+5. Keep the public Supabase publishable key in its intended frontend role.
+6. Keep vote submission routed through the existing "submit-vote-secure-v2" Edge Function.
+7. Never insert votes directly into the database from browser JavaScript.
+8. Preserve server-side Turnstile verification.
+9. Do not claim that Turnstile alone guarantees one vote per person.
+10. Do not invent candidates, party affiliations, photos, vote counts, state participation figures, or test results.
+11. Do not automatically modify my Supabase database or deploy to my live website.
+12. If database or Edge Function changes are genuinely necessary, explain them separately, provide the proposed SQL or code, explain the risks, and give safe backup and rollback instructions.
+13. Clearly identify the website as an unofficial public opinion poll, not an official INEC platform, official election, or reliable prediction of the 2027 election outcome.
+
+Do not sacrifice the existing working system for visual improvements.
+
+4. Feature One: Improved candidate voting experience
+
+Improve the existing candidate section.
+
+Requirements:
+
+- Load real candidate records using "get_poll_candidates".
+- Preserve the candidate identifiers and field mappings expected by the existing code.
+- Display actual candidate names, party affiliations, and photographs when those fields are available.
+- Do not invent candidate information.
+- Use an existing fallback image or a neutral placeholder when a candidate photo is unavailable.
+- Create clean, responsive candidate cards suitable for mobile phones and desktop screens.
+- Make the selected candidate visually obvious.
+- Ensure candidate selection is keyboard accessible.
+- Include loading, empty, error, and retry states.
+- Prevent inappropriate duplicate clicks while a vote is being submitted.
+- Keep the existing vote-submission request format unless the existing backend demonstrably requires a change.
+- Keep the Turnstile requirement and server-side verification.
+- After a successful submission, clearly confirm that the vote was recorded and disable further submission during that page session.
+- Do not imply that a browser-only restriction guarantees one vote per person.
+
+Do not change the database schema just to improve the appearance of candidate cards.
+
+5. Feature Two: Live results dashboard
+
+Improve the results section using the existing "get_poll_results" RPC.
+
+Show, where supported by the real returned data:
+
+- Total recorded votes.
+- Candidate vote counts.
+- Percentage share for each candidate.
+- Candidate ranking based on recorded counts.
+- Responsive horizontal progress bars.
+- A manual refresh button.
+- The time the results were last refreshed.
+- Clear loading, empty, and error messages.
+
+Technical requirements:
+
+- Use "db.rpc("get_poll_results")".
+- Inspect the actual data structure and normalize it safely.
+- Calculate percentages consistently from the actual vote counts.
+- Avoid division by zero.
+- Avoid displaying fake zero totals when the results request fails.
+- Avoid silently replacing valid data with fabricated fallback data.
+- Handle null values, unexpected response shapes, and RPC errors.
+- Prevent overlapping automatic refresh requests if automatic refresh is implemented.
+- Clean up any interval or event listener that is no longer needed.
+- Keep the dashboard usable on mobile screens.
+
+If the results RPC already provides a reliable total, use it appropriately. Do not assume candidate counts can always be added together to obtain the total.
+
+Clearly explain that the dashboard reflects votes recorded on this website only. Do not present these results as an official election forecast.
+
+6. Feature Three: Share Your Choice
+
+After a successful vote, display a friendly Share Your Choice panel.
+
+Implement:
+
+- WhatsApp sharing.
+- Native Web Share API where supported.
+- A copy-link option as a fallback.
+- Clear success and error feedback.
+- Optional simple sharing links for Facebook and X if useful.
+
+Use this suggested message:
+
+“I’ve made my choice on WhoYouChoose! Who would you choose for Nigeria in 2027? Share your opinion here: https://whoyouchoose.netlify.app/”
+
+Requirements:
+
+- Correctly URL-encode messages and links.
+- Use the live website URL.
+- Never automatically publish to a visitor's social accounts.
+- Do not suggest that sharing a link proves another person has voted.
+- Avoid unnecessary third-party libraries.
+
+7. Feature Four: Nigerian civic-knowledge quiz
+
+Create a separate interactive quiz section with approximately 10–20 accurate, non-partisan questions.
+
+Topics may include:
+
+- Nigerian history.
+- The Constitution and government.
+- The roles of the executive, legislature, and judiciary.
+- Civic responsibilities.
+- Electoral procedures.
+- The responsibilities of electoral institutions.
+- Democratic participation.
+
+Quiz requirements:
+
+1. Display one question at a time or use an equally clear mobile-friendly layout.
+2. Provide selectable answer options.
+3. Give immediate feedback after an answer.
+4. Include a short explanation of the correct answer.
+5. Track the score accurately.
+6. Display the final score when the quiz is completed.
+7. Include a Play Again button.
+8. Allow users to share their quiz score or challenge a friend.
+9. Keep the quiz separate from voting and recorded vote totals.
+10. Do not require an account or a new database table for the initial implementation.
+
+Accuracy requirements:
+
+- Use factually sound questions and answers.
+- Keep the content politically neutral.
+- Avoid uncertain or time-sensitive facts unless they are clearly dated and verified.
+- Do not fabricate current electoral information.
+- Structure the quiz questions in a JavaScript array so more questions can be added easily.
+
+8. Feature Five: State participation
+
+Include a State Participation section for Nigeria's 36 states and the Federal Capital Territory.
+
+A searchable or accessible selector may be used if appropriate.
+
+However, follow these restrictions carefully:
+
+- Do not fabricate state participation totals.
+- Do not display state-level candidate rankings without genuine, verified state-level data.
+- Do not infer a visitor's state from their IP address.
+- Do not silently add a state field to the vote-submission payload.
+- Do not suggest that selecting a state means a vote has been submitted.
+- Do not change the existing database schema without explaining the proposed change first.
+
+If the current database does not store state information, display an honest notice such as:
+
+“State participation tracking is not available yet.”
+
+You may offer a clearly labelled, non-statistical state-interest selector if it is useful, but it must not be presented as actual recorded voting participation.
+
+If you propose collecting state information in the future, explain:
+
+- Why the data is needed.
+- That participation in state reporting must be voluntary.
+- How consent will be obtained.
+- What database changes would be necessary.
+- What changes would be required in the secure Edge Function.
+- How existing vote records will be preserved.
+
+Do not implement a new state-tracking backend without explaining the migration and obtaining my approval.
+
+Include Nigeria's 36 states and the Federal Capital Territory if a state selector is implemented.
+
+9. Design and user experience
+
+Keep the website's Nigerian green, white, and deep-green visual identity.
+
+Build a polished, mobile-first single-page experience with navigation links to:
+
+- Vote.
+- Results.
+- Civic Quiz.
+- State Participation.
+
+Requirements:
+
+- Responsive layout for mobile phones, tablets, and desktops.
+- Clear visual hierarchy.
+- Readable typography.
+- Good colour contrast.
+- Accessible buttons and form controls.
+- Visible keyboard focus indicators.
+- Semantic HTML.
+- Appropriate loading indicators.
+- Clear success, information, and error messages.
+- Restrained animations.
+- Respect for reduced-motion preferences.
+- Fast loading and minimal external dependencies.
+- No unnecessary clutter or excessive pages.
+
+Keep the unofficial public-opinion-poll disclaimer visible in an appropriate place, such as the introductory section and footer.
+
+Do not redesign the site so aggressively that it loses its existing identity or working functionality.
+
+10. Code quality and implementation requirements
+
+Before editing:
+
+1. Read the complete supplied source code.
+2. Identify the existing HTML structure, styles, JavaScript functions, and event listeners.
+3. Map the existing candidate-loading flow.
+4. Map the results-loading flow.
+5. Map the voting submission flow.
+6. Identify how Turnstile is initialized, verified, and reset.
+7. Identify how the app initializes and handles errors.
+8. Preserve existing working integrations.
+
+During implementation:
+
+- Use clean, maintainable JavaScript.
+- Avoid unnecessary dependencies.
+- Avoid duplicate event listeners.
+- Avoid conflicting element IDs.
+- Ensure all referenced HTML elements exist.
+- Handle asynchronous requests and failures safely.
+- Avoid unsafe insertion of untrusted data into HTML.
+- Use "textContent" or safe DOM construction where appropriate.
+- Ensure percentage bars cannot exceed 100%.
+- Ensure quiz answers and scores are calculated correctly.
+- Ensure share links work on mobile.
+- Ensure navigation links point to the correct sections.
+- Avoid breaking the existing Supabase client.
+- Keep candidate and results loading independent of Turnstile loading where possible.
+
+Check that the final JavaScript has valid syntax and that the final HTML is structurally complete.
+
+Do not claim to have tested the live Supabase backend or deployed to Netlify unless you actually performed those tests.
+
+11. Source-code completeness
+
+The existing source I supply below may be incomplete at its final lines.
+
+If it ends inside the application initialization or error-handling section:
+
+- Inspect the supplied code carefully.
+- Identify exactly where it stops.
+- Reconstruct the missing closing logic.
+- Preserve the existing functions and intended behavior.
+- Do not leave incomplete expressions or unclosed HTML tags.
+- Do not output ellipses or comments such as “rest of code remains unchanged.”
+- Do not ask me to manually combine fragments if a complete replacement file can be produced.
+
+If the source is insufficient to determine an important backend detail, state the limitation and preserve the existing request and response conventions as far as possible.
+
+Return a complete, syntactically valid "index.html" suitable for a Netlify static-site deployment, plus any additional files that are genuinely necessary.
+
+12. Testing checklist
+
+Provide clear, practical steps to test the upgraded website before publishing it.
+
+Include tests for:
+
+1. Website loading.
+2. Candidate loading.
+3. Candidate selection.
+4. Turnstile initialization.
+5. Turnstile expiry and retry.
+6. Secure vote submission through the existing Edge Function.
+7. Vote-success messaging.
+8. Results loading and manual refresh.
+9. Results error handling.
+10. WhatsApp sharing.
+11. Native sharing where supported.
+12. Copy-link functionality.
+13. Quiz answer feedback.
+14. Quiz score calculation.
+15. Restarting the quiz.
+16. Sharing a quiz score.
+17. State participation messaging.
+18. Mobile responsiveness.
+19. Keyboard accessibility.
+20. Browser-console errors.
+
+Do not use destructive tests against the production database.
+
+If a test requires a real vote, explain that it may create a permanent production record. Prefer safe preview or staging testing where available.
+
+13. Netlify deployment instructions
+
+After providing the code, explain how I can deploy it safely.
+
+Include:
+
+- How to back up the current website files.
+- How to replace the existing "index.html".
+- How to preview and test the changes before publishing.
+- How to check the browser console.
+- How to verify the Supabase candidate and results requests.
+- How to verify the Edge Function and Turnstile flow.
+- How to publish the final version.
+- How to restore the previous version if anything breaks.
+
+Keep the instructions beginner-friendly and step by step.
+
+Do not assume that I have already completed a step that you have not explained.
+
+14. Database and backend changes
+
+Keep frontend-only improvements separate from database or Edge Function changes.
+
+If a backend change is necessary, provide it in a separate section and explain:
+
+- The reason for the change.
+- The exact SQL or Edge Function modification.
+- What it affects.
+- How to back up first.
+- How to test safely.
+- How to roll back if necessary.
+
+Do not reset the database, delete votes, disable RLS, expose secrets, or make unapproved production changes.
+
+If no backend change is necessary for a feature, say so.
+
+15. Required response format
+
+Return your answer in this order:
+
+A. Source-code audit
+
+- Explain what the existing code already does.
+- Identify any missing or incomplete sections.
+- Identify any assumptions you had to make.
+
+B. Implementation summary
+
+- Explain the features implemented.
+- Explain what was preserved.
+- Explain any limitations.
+
+C. Complete updated website code
+
+- Provide every required file in full.
+- No ellipses.
+- No omitted sections.
+- No placeholder instructions requiring me to reconstruct the code myself.
+
+D. Optional backend changes
+
+- Include only changes that are genuinely necessary.
+- Keep proposed SQL and Edge Function code separate from the frontend.
+- Explain risks, backups, and rollback.
+
+E. Testing checklist
+
+- Provide practical, step-by-step tests.
+
+F. Netlify deployment guide
+
+- Explain how to preview, test, publish, and roll back safely.
+
+16. Final instruction
+
+My priority is to improve the existing WhoYouChoose website without breaking its current voting and results functionality or losing recorded votes.
+
+Be careful, thorough, security-conscious, and practical. Correct mistakes you discover in the existing code, but do not invent backend capabilities or make unapproved database changes.
+
+Now inspect the source code pasted below this prompt and implement the upgrade.
+
+
+---
+
+<!DOCTYPE html>  <html lang="en">  
+<head>  
+<meta charset="UTF-8">  
+<meta name="viewport" content="width=device-width, initial-scale=1">  
+<meta name="theme-color" content="#073b2a">  
+<title>WhoYouChoose | Nigeria Decides 2027</title>  
+<meta name="description" content="An unofficial public opinion poll for Nigeria's 2027 presidential election.">  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>  <style>  
+:root {  
+  --green:#087443;  
+  --deep:#073b2a;  
+  --light:#e9f6ee;  
+  --navy:#102b46;  
+  --bg:#f5f8f6;  
+  --text:#17251e;  
+  --muted:#66756c;  
+  --border:#dce7df;  
+  --danger:#b42318;  
+}  
+* { box-sizing:border-box; }  
+body {  
+  margin:0;  
+  background:var(--bg);  
+  color:var(--text);  
+  font-family:Arial,Helvetica,sans-serif;  
+  line-height:1.55;  
+}  
+button { font:inherit; }  
+button:disabled { opacity:.55; cursor:not-allowed; }  
+.topbar { background:var(--deep); color:white; padding:14px 18px; }  
+.nav {  
+  max-width:1120px;  
+  margin:auto;  
+  display:flex;  
+  align-items:center;  
+  justify-content:space-between;  
+  gap:14px;  
+  flex-wrap:wrap;  
+}  
+.brand { display:flex; align-items:center; gap:10px; font-size:21px; font-weight:800; }  
+.flag {  
+  width:36px;  
+  height:24px;  
+  display:inline-flex;  
+  overflow:hidden;  
+  border-radius:3px;  
+  border:1px solid #ffffff66;  
+}  
+.flag span { flex:1; }  
+.flag .g { background:#008751; }  
+.flag .w { background:white; }  
+.nav a { color:white; text-decoration:none; font-size:14px; font-weight:bold; }  
+.hero {  
+  background:linear-gradient(135deg,#073b2a,#0b6543 65%,#102b46);  
+  color:white;  
+  padding:50px 18px;  
+  text-align:center;  
+}  
+.hero-inner { max-width:800px; margin:auto; }  
+.eyebrow {  
+  display:inline-block;  
+  padding:6px 12px;  
+  border:1px solid #ffffff66;  
+  border-radius:50px;  
+  font-size:12px;  
+  font-weight:bold;  
+  letter-spacing:1px;  
+}  
+h1 { font-size:clamp(32px,7vw,55px); line-height:1.08; margin:20px 0 15px; letter-spacing:-1px; }  
+.hero p { max-width:620px; margin:auto; color:#e5f1e9; }  
+.actions { display:flex; justify-content:center; gap:12px; flex-wrap:wrap; margin-top:24px; }  
+.btn {  
+  border:0;  
+  border-radius:9px;  
+  padding:12px 17px;  
+  font-weight:bold;  
+  cursor:pointer;  
+  text-decoration:none;  
+  display:inline-flex;  
+  align-items:center;  
+  justify-content:center;  
+}  
+.white { background:white; color:var(--deep); }  
+.green { background:var(--green); color:white; }  
+.outline { background:white; color:var(--deep); border:1px solid var(--border); }  
+.notice-wrap { max-width:1000px; margin:20px auto; padding:0 16px; }  
+.notice {  
+  background:#fff9e8;  
+  color:#634b13;  
+  border:1px solid #f0dfaa;  
+  border-radius:10px;  
+  padding:13px 15px;  
+  font-size:13px;  
+}  
+main { max-width:1120px; margin:auto; padding:28px 16px 55px; }  
+.section { margin-top:32px; }  
+.section:first-child { margin-top:0; }  
+.heading {  
+  display:flex;  
+  justify-content:space-between;  
+  align-items:end;  
+  gap:12px;  
+  flex-wrap:wrap;  
+  margin-bottom:17px;  
+}  
+h2 { color:var(--deep); font-size:clamp(23px,4vw,30px); line-height:1.2; margin:0 0 6px; }  
+.sub { margin:0; color:var(--muted); font-size:14px; }  
+.status,.help { color:var(--muted); font-size:13px; }  
+.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:17px; }  
+.card {  
+  background:white;  
+  border:1px solid var(--border);  
+  border-radius:15px;  
+  overflow:hidden;  
+  box-shadow:0 8px 26px #073b2a12;  
+  display:flex;  
+  flex-direction:column;  
+  min-width:0;  
+}  
+.card.selected { border:2px solid var(--green); }  
+.photo {  
+  height:205px;  
+  position:relative;  
+  display:flex;  
+  align-items:center;  
+  justify-content:center;  
+  overflow:hidden;  
+  background:linear-gradient(135deg,#e8f3eb,#e7edf4);  
+}  
+.photo img { width:100%; height:100%; object-fit:cover; object-position:center 20%; }  
+.initials { font-size:58px; font-weight:bold; color:#6c9180; }  
+.party-label {  
+  position:absolute;  
+  bottom:10px;  
+  left:10px;  
+  background:#073b2aee;  
+  color:white;  
+  border-radius:6px;  
+  padding:5px 9px;  
+  font-size:11px;  
+  font-weight:bold;  
+  max-width:calc(100% - 20px);  
+  overflow-wrap:anywhere;  
+}  
+.card-body { padding:15px; display:flex; flex-direction:column; flex:1; }  
+.candidate-name { font-size:17px; font-weight:bold; line-height:1.35; margin:0 0 5px; overflow-wrap:anywhere; }  
+.party { color:var(--muted); font-size:13px; margin:0 0 13px; }  
+.choose { width:100%; margin-top:auto; }  
+.selected-note { font-size:12px; color:var(--green); font-weight:bold; }  
+.panel {  
+  background:white;  
+  border:1px solid var(--border);  
+  border-radius:15px;  
+  padding:20px;  
+  box-shadow:0 8px 26px #073b2a0c;  
+}  
+.stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin-bottom:20px; }  
+.stat { background:#f0f7f2; border-radius:10px; padding:14px; }  
+.stat-label { color:var(--muted); font-size:12px; font-weight:bold; }  
+.stat-value { color:var(--deep); font-size:25px; font-weight:bold; }  
+.result-row { padding:15px 0; border-top:1px solid #edf1ed; }  
+.result-top { display:flex; justify-content:space-between; gap:12px; margin-bottom:8px; }  
+.result-name { font-size:14px; font-weight:bold; overflow-wrap:anywhere; }  
+.result-votes { color:var(--muted); font-size:12px; }  
+.percent { font-size:16px; font-weight:bold; color:var(--deep); white-space:nowrap; }  
+.track { height:10px; background:#e9efea; border-radius:99px; overflow:hidden; }  
+.fill { height:100%; background:linear-gradient(90deg,#087443,#17a667); border-radius:99px; }  
+.selected-box {  
+  border-radius:10px;  
+  background:var(--light);  
+  padding:14px;  
+  margin:16px 0;  
+  font-weight:bold;  
+  color:var(--deep);  
+  overflow-wrap:anywhere;  
+}  
+.turnstile-wrap { margin:16px 0; min-height:65px; overflow-x:auto; }  
+.message {  
+  display:none;  
+  padding:12px 14px;  
+  border-radius:9px;  
+  margin:14px 0;  
+  font-size:14px;  
+  overflow-wrap:anywhere;  
+}  
+.message.show { display:block; }  
+.error { background:#fff0ef; color:var(--danger); border:1px solid #f4c7c3; }  
+.success { background:#e9f8ef; color:#126239; border:1px solid #b9e4c9; }  
+.info { background:#edf4ff; color:#214f88; border:1px solid #c9ddfb; }  
+.empty { background:white; border:1px dashed #cbd9cf; color:var(--muted); border-radius:12px; padding:22px; text-align:center; font-size:14px; }  
+.loading { padding:22px; text-align:center; color:var(--muted); font-size:14px; }  
+footer { background:#082f23; color:#e1eee5; padding:25px 16px; text-align:center; font-size:12px; }  
+footer p { max-width:800px; margin:7px auto; }  
+.footer-brand { color:white; font-weight:bold; font-size:17px; }  
+  
+@media(max-width:520px) {  
+  .hero { padding:40px 17px; }  
+  .brand { font-size:19px; }  
+  .grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }  
+  .photo { height:165px; }  
+  .card-body { padding:11px; }  
+  .candidate-name { font-size:15px; }  
+  .party { font-size:12px; }  
+  .choose { font-size:12px; padding:10px 7px; }  
+  .panel { padding:15px; }  
+}  
+@media(max-width:350px) {  
+  .grid { grid-template-columns:1fr; }  
+  .photo { height:230px; }  
+}  
+</style>  </head>  <body>  
+<header class="topbar">  
+  <div class="nav">  
+    <div class="brand">  
+      <span class="flag" aria-label="Nigerian flag">  
+        <span class="g"></span><span class="w"></span><span class="g"></span>  
+      </span>  
+      <span>WhoYouChoose</span>  
+    </div>  
+    <a href="#results">View Results ↓</a>  
+  </div>  
+</header>  <section class="hero">  
+  <div class="hero-inner">  
+    <span class="eyebrow">NIGERIA · 2027</span>  
+    <h1>Your Voice.<br>Nigeria's Future.</h1>  
+    <p>Which candidate would you choose for Nigeria's next president? Explore the candidates and follow the public poll results.</p>  
+    <div class="actions">  
+      <a href="#candidates" class="btn white">Choose a Candidate</a>  
+      <a href="#results" class="btn outline">See Poll Results</a>  
+    </div>  
+  </div>  
+</section>  <div class="notice-wrap">  
+  <div class="notice">  
+    <strong>Important:</strong> WhoYouChoose is an independent, unofficial public opinion poll. It is not affiliated with INEC or any political party and does not represent official election results. Online voting cannot guarantee one vote per person.  
+  </div>  
+</div>  <main>  
+  <section class="section" id="candidates">  
+    <div class="heading">  
+      <div>  
+        <h2>Meet the Candidates</h2>  
+        <p class="sub">Select the candidate you would choose.</p>  
+      </div>  
+      <span class="status" id="candidate-count">Loading candidates…</span>  
+    </div>  
+    <div id="candidate-message" class="message" role="status"></div>  
+    <div id="candidate-grid" class="grid">  
+      <div class="loading">Loading candidates…</div>  
+    </div>  
+  </section>    <section class="section" id="vote">  
+    <div class="heading">  
+      <div>  
+        <h2>Cast Your Opinion</h2>  
+        <p class="sub">Choose a candidate and complete the security check.</p>  
+      </div>  
+    </div>  
+    <div class="panel">  
+      <p>Your selection:</p>  
+      <div id="selected-candidate" class="selected-box">No candidate selected yet.</div>  
+      <div id="vote-message" class="message" role="status" aria-live="polite"></div>  
+      <div class="turnstile-wrap">  
+        <div id="turnstile-widget"></div>  
+      </div>  
+      <button id="retry-turnstile" class="btn outline" type="button" hidden>↻ Retry security check</button>  
+      <button id="submit-vote" class="btn green" type="button" disabled>Submit My Vote</button>  
+      <p class="help">Please submit only your own genuine opinion.</p>  
+    </div>  
+  </section>    <section class="section" id="results">  
+    <div class="heading">  
+      <div>  
+        <h2>Live Poll Results</h2>  
+        <p class="sub">Results reflect recorded submissions to this website, not official election results.</p>  
+      </div>  
+      <button id="refresh-results" class="btn outline" type="button">↻ Refresh</button>  
+    </div>  
+    <div class="panel">  
+      <div class="stats">  
+        <div class="stat">  
+          <div class="stat-label">Total votes recorded</div>  
+          <div class="stat-value" id="total-votes">—</div>  
+        </div>  
+        <div class="stat">  
+          <div class="stat-label">Candidates listed</div>  
+          <div class="stat-value" id="result-candidate-count">—</div>  
+        </div>  
+      </div>  
+      <div id="results-message" class="message" role="status"></div>  
+      <div id="results-list"><div class="loading">Loading poll results…</div></div>  
+    </div>  
+  </section>  
+</main>  <footer>  
+  <div class="footer-brand">WhoYouChoose 🇳🇬</div>  
+  <p>An independent public opinion poll about Nigeria's 2027 presidential election.</p>  
+  <p>This website is not operated by INEC, the Nigerian government, or any political party.</p>  
+  <p>© <span id="year"></span> WhoYouChoose. Public opinion is not an election result.</p>  
+</footer>  <script>  
+"use strict";  
+  
+const SUPABASE_URL = "https://dhznqadwkfcjqgoqbqyk.supabase.co";  
+const SUPABASE_KEY = "sb_publishable_uDRIn91CPoWtBCDJ-Uh7SQ_3_nLU_lK";  
+const EDGE_FUNCTION_URL =  
+  SUPABASE_URL + "/functions/v1/submit-vote-secure-v2";  
+  
+// Use the site key from your NEW Cloudflare Turnstile widget.  
+const TURNSTILE_SITE_KEY = "0x4AAAAAAFUarj88F31fABto";  
+  
+const COMMONS = "https://commons.wikimedia.org/wiki/Special:FilePath/";  
+const candidatePhotos = {  
+  "Bola Ahmed Tinubu": COMMONS + "Bola_Tinubu_portrait.jpg?width=500",  
+  "Atiku Abubakar": COMMONS + "Atiku_Abubakar_2023.jpg?width=500",  
+  "Peter Gregory Obi": COMMONS + "Peter_Obi.png?width=500",  
+  "Omoyele Sowore": COMMONS + "Omoyele_Sowore_(29682338514).jpg?width=500",  
+  "Adewole Ebenezer Adebayo": COMMONS + "PAA_Wikipedia_Speech_(2).jpg?width=500"  
+};  
+  
+let db = null;  
+let candidates = [];  
+let selectedCandidateId = null;  
+let turnstileToken = "";  
+let turnstileWidgetId = null;  
+let isSubmitting = false;  
+let voteSubmitted = false;  
+let turnstileLoadFailed = false;  
+  
+const $ = id => document.getElementById(id);  
+$("year").textContent = new Date().getFullYear();  
+  
+function message(id, text, type = "info") {  
+  $(id).textContent = text;  
+  $(id).className = "message show " + type;  
+}  
+  
+function clearMessage(id) {  
+  $(id).textContent = "";  
+  $(id).className = "message";  
+}  
+  
+function firstValue(row, keys, fallback = null) {  
+  if (!row || typeof row !== "object") return fallback;  
+  for (const key of keys) {  
+    if (row[key] !== null && row[key] !== undefined && row[key] !== "") {  
+      return row[key];  
+    }  
+  }  
+  return fallback;  
+}  
+  
+function getCandidateId(row) {  
+  return firstValue(  
+    row,  
+    ["candidate_id", "id", "candidateId", "candidate_uuid"],  
+    null  
+  );  
+}  
+  
+function getCandidateName(row) {  
+  return String(  
+    firstValue(row, ["candidate_name", "name", "full_name", "candidate"], "Unnamed candidate")  
+  );  
+}  
+  
+function getCandidateParty(row) {  
+  return String(  
+    firstValue(row, [  
+      "party_name",  
+      "party",  
+      "party_acronym",  
+      "party_abbreviation",  
+      "party_name_abbreviation",  
+      "party_code"  
+    ], "Party not listed")  
+  );  
+}  
+  
+function getVotes(row) {  
+  const value = Number(  
+    firstValue(row, ["votes", "vote_count", "total_votes", "count", "votes_count"], 0)  
+  );  
+  return Number.isFinite(value) && value >= 0 ? value : 0;  
+}  
+  
+function normalizeRows(data) {  
+  if (Array.isArray(data)) return data;  
+  if (data && Array.isArray(data.data)) return data.data;  
+  if (data && Array.isArray(data.rows)) return data.rows;  
+  if (data && Array.isArray(data.results)) return data.results;  
+  return [];  
+}  
+  
+function initials(name) {  
+  return name.trim().split(/\s+/).slice(0, 2)  
+    .map(part => part[0]).join("").toUpperCase() || "?";  
+}  
+  
+function safeImage(url) {  
+  try {  
+    const parsed = new URL(url);  
+    return parsed.protocol === "https:" || parsed.protocol === "http:";  
+  } catch (_) {  
+    return false;  
+  }  
+}  
+  
+function photoFor(name, row) {  
+  const fromRow = firstValue(  
+    row,  
+    ["photo_url", "image_url", "candidate_photo", "photo", "image"],  
+    ""  
+  );  
+  
+  if (fromRow && safeImage(String(fromRow))) return String(fromRow);  
+  return candidatePhotos[name] && safeImage(candidatePhotos[name])  
+    ? candidatePhotos[name]  
+    : "";  
+}  
+  
+function updateButton() {  
+  const button = $("submit-vote");  
+  
+  const selectedRow = candidates.find(row =>  
+    String(getCandidateId(row)) === String(selectedCandidateId) &&  
+    getCandidateId(row) !== null  
+  );  
+  
+  button.disabled = !selectedRow ||  
+    !turnstileToken ||  
+    isSubmitting ||  
+    voteSubmitted;  
+  
+  if (isSubmitting) {  
+    button.textContent = "Submitting vote…";  
+  } else if (voteSubmitted) {  
+    button.textContent = "Vote submitted";  
+  } else {  
+    button.textContent = "Submit My Vote";  
+  }  
+}  
+  
+function selectCandidate(id) {  
+  if (voteSubmitted || isSubmitting) return;  
+  
+  const row = candidates.find(candidate =>  
+    String(getCandidateId(candidate)) === String(id)  
+  );  
+  
+  if (!row || getCandidateId(row) === null) {  
+    message(  
+      "vote-message",  
+      "This candidate does not have a usable database ID. Voting is disabled until the database returns the candidate's ID.",  
+      "error"  
+    );  
+    return;  
+  }  
+  
+  selectedCandidateId = getCandidateId(row);  
+  
+  $("selected-candidate").textContent =  
+    getCandidateName(row) + " — " + getCandidateParty(row);  
+  
+  document.querySelectorAll(".card").forEach(card => {  
+    const selected = card.dataset.key === String(selectedCandidateId);  
+    card.classList.toggle("selected", selected);  
+  
+    const button = card.querySelector(".choose");  
+    if (button) button.textContent = selected ? "✓ Selected" : "Choose Candidate";  
+  
+    const note = card.querySelector(".selected-note");  
+    if (note) note.textContent = selected ? "Your current selection" : "";  
+  });  
+  
+  clearMessage("vote-message");  
+  updateButton();  
+}  
+  
+function renderCandidates() {  
+  const grid = $("candidate-grid");  
+  grid.replaceChildren();  
+  
+  $("candidate-count").textContent =  
+    candidates.length + " candidate" + (candidates.length === 1 ? "" : "s");  
+  
+  $("result-candidate-count").textContent = candidates.length;  
+  
+  if (!candidates.length) {  
+    grid.innerHTML =  
+      '<div class="empty">No candidate records were returned. Check the get_poll_candidates function.</div>';  
+    message("candidate-message", "The database returned no candidate rows.", "error");  
+    return;  
+  }  
+  
+  clearMessage("candidate-message");  
+  
+  candidates.forEach(row => {  
+    const name = getCandidateName(row);  
+    const party = getCandidateParty(row);  
+    const id = getCandidateId(row);  
+  
+    const card = document.createElement("article");  
+    card.className = "card";  
+    card.dataset.key = String(id === null ? name : id);  
+  
+    const photo = document.createElement("div");  
+    photo.className = "photo";  
+  
+    const url = photoFor(name, row);  
+  
+    if (url) {  
+      const img = document.createElement("img");  
+      img.src = url;  
+      img.alt = name;  
+      img.loading = "lazy";  
+      img.onerror = () => {  
+        img.remove();  
+        const mark = document.createElement("div");  
+        mark.className = "initials";  
+        mark.textContent = initials(name);  
+        photo.prepend(mark);  
+      };  
+      photo.appendChild(img);  
+    } else {  
+      const mark = document.createElement("div");  
+      mark.className = "initials";  
+      mark.textContent = initials(name);  
+      photo.appendChild(mark);  
+    }  
+  
+    const partyLabel = document.createElement("span");  
+    partyLabel.className = "party-label";  
+    partyLabel.textContent = party;  
+    photo.appendChild(partyLabel);  
+  
+    const body = document.createElement("div");  
+    body.className = "card-body";  
+  
+    const title = document.createElement("h3");  
+    title.className = "candidate-name";  
+    title.textContent = name;  
+  
+    const partyText = document.createElement("p");  
+    partyText.className = "party";  
+    partyText.textContent = party;  
+  
+    const button = document.createElement("button");  
+    button.type = "button";  
+    button.className = "btn green choose";  
+    button.textContent = "Choose Candidate";  
+    button.disabled = voteSubmitted || id === null;  
+    button.addEventListener("click", () => selectCandidate(id));  
+  
+    const note = document.createElement("p");  
+    note.className = "selected-note";  
+    note.textContent = "";  
+  
+    body.append(title, partyText, button, note);  
+    card.append(photo, body);  
+    grid.appendChild(card);  
+  });  
+}  
+  
+async function loadCandidates() {  
+  $("candidate-grid").innerHTML =  
+    '<div class="loading">Loading candidates…</div>';  
+  clearMessage("candidate-message");  
+  
+  const { data, error } = await db.rpc("get_poll_candidates");  
+  
+  if (error) {  
+    console.error("Candidate query failed:", error);  
+    $("candidate-grid").innerHTML =  
+      '<div class="empty">Candidates could not be loaded. Please refresh.</div>';  
+    message("candidate-message", "Candidate query failed: " + error.message, "error");  
+    $("candidate-count").textContent = "Unavailable";  
+    return;  
+  }  
+  
+  candidates = normalizeRows(data);  
+  renderCandidates();  
+}  
+  
+  
+async function loadResults() {  
+  $("results-list").innerHTML =  
+    '<div class="loading">Loading poll results…</div>';  
+  clearMessage("results-message");  
+  
+  try {  
+    const { data, error } = await db.rpc("get_poll_results");  
+    if (error) throw error;  
+  
+    const rows = normalizeRows(data);  
+    const total = rows.reduce((sum, row) => sum + getVotes(row), 0);  
+    $("total-votes").textContent = total.toLocaleString();  
+  
+    const list = $("results-list");  
+    list.replaceChildren();  
+  
+    if (!rows.length) {  
+      list.innerHTML =  
+        '<div class="empty">No result rows were returned by get_poll_results.</div>';  
+      return;  
+    }  
+  
+    rows.sort((a, b) => getVotes(b) - getVotes(a));  
+  
+    rows.forEach(row => {  
+      const name = getCandidateName(row);  
+      const party = getCandidateParty(row);  
+      const votes = getVotes(row);  
+  
+      const suppliedPercent = firstValue(  
+        row,  
+        ["percentage", "vote_percentage", "percent", "percentage_of_votes"],  
+        null  
+      );  
+  
+      const parsedPercent =  
+        suppliedPercent === null ? null : Number(suppliedPercent);  
+  
+      const percent =  
+        parsedPercent !== null && Number.isFinite(parsedPercent)  
+          ? Math.max(0, Math.min(100, parsedPercent))  
+          : total > 0  
+            ? (votes / total) * 100  
+            : 0;  
+  
+      const item = document.createElement("div");  
+      item.className = "result-row";  
+  
+      const to
