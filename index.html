@@ -349,7 +349,7 @@ footer p { max-width:800px; margin:7px auto; }
       <div>
         <p class="civic-kicker">Learn as you participate</p>
         <h2 id="quiz-heading">Nigerian Civic-Knowledge Quiz</h2>
-        <p class="sub">A short, non-partisan quiz about Nigeria's history, Constitution, and democratic institutions.</p>
+        <p class="sub">Each 12-question session draws at random from the 100-question, source-linked civic knowledge bank.</p>
       </div>
     </div>
     <div class="panel quiz-panel" id="quiz-panel">
@@ -362,6 +362,7 @@ footer p { max-width:800px; margin:7px auto; }
       <div id="quiz-options" class="quiz-options" role="group" aria-labelledby="quiz-question"></div>
       <div id="quiz-feedback" class="quiz-feedback" role="status" aria-live="polite" hidden></div>
       <div class="quiz-controls">
+        <button id="quiz-retry" class="btn outline quiz-retry" type="button" hidden>Retry loading quiz</button>
         <button id="quiz-next" class="btn green" type="button" disabled>Check answer</button>
       </div>
       <div id="quiz-finish" class="quiz-finish" hidden>
@@ -381,17 +382,26 @@ footer p { max-width:800px; margin:7px auto; }
       <div>
         <p class="civic-kicker">Transparent by design</p>
         <h2 id="state-heading">State Participation</h2>
-        <p class="sub">This poll does not currently collect or report state-level voting data.</p>
+        <p class="sub">Recorded state participation is shown only when the secure aggregate data feed is available.</p>
       </div>
+      <button id="refresh-states" class="btn outline" type="button">↻ Refresh</button>
     </div>
     <div class="panel state-panel">
-      <p class="state-notice" role="note"><strong>State participation tracking is not available yet.</strong> No state totals or state-level candidate rankings are available. Your location is not inferred, and no state information is added to a vote.</p>
-      <details class="state-list-details">
-        <summary>Nigeria’s 36 states and the Federal Capital Territory</summary>
-        <ul id="state-list" class="state-list">
-          <li>Abia</li><li>Adamawa</li><li>Akwa Ibom</li><li>Anambra</li><li>Bauchi</li><li>Bayelsa</li><li>Benue</li><li>Borno</li><li>Cross River</li><li>Delta</li><li>Ebonyi</li><li>Edo</li><li>Ekiti</li><li>Enugu</li><li>Gombe</li><li>Imo</li><li>Jigawa</li><li>Kaduna</li><li>Kano</li><li>Katsina</li><li>Kebbi</li><li>Kogi</li><li>Kwara</li><li>Lagos</li><li>Nasarawa</li><li>Niger</li><li>Ogun</li><li>Ondo</li><li>Osun</li><li>Oyo</li><li>Plateau</li><li>Rivers</li><li>Sokoto</li><li>Taraba</li><li>Yobe</li><li>Zamfara</li><li>Federal Capital Territory</li>
-        </ul>
-      </details>
+      <div class="state-stats" aria-label="State participation summary">
+        <div class="state-stat"><span class="state-stat-label">Total recorded participation</span><strong class="state-stat-value" id="state-total">—</strong></div>
+        <div class="state-stat"><span class="state-stat-label">Highest recorded</span><strong class="state-stat-value" id="state-highest">—</strong></div>
+        <div class="state-stat"><span class="state-stat-label">Lowest recorded</span><strong class="state-stat-value" id="state-lowest">—</strong></div>
+      </div>
+      <div id="state-message" class="state-loading" role="status" aria-live="polite">Loading state participation…</div>
+      <div class="state-table-wrap">
+        <table class="state-table">
+          <caption>Recorded online participation by Nigerian state and the Federal Capital Territory.</caption>
+          <thead><tr><th scope="col">State / FCT</th><th scope="col">Recorded participation</th><th scope="col">Share of recorded total</th></tr></thead>
+          <tbody id="state-results-list"></tbody>
+        </table>
+      </div>
+      <p id="state-updated" class="results-updated" aria-live="polite">No successful refresh yet.</p>
+      <p class="state-notice" role="note"><strong>Data note:</strong> These are website records, not INEC figures or real-world turnout. A zero recorded count does not mean no one in that area participated in an election. No location is inferred, and individual voter or candidate-choice details are never shown here.</p>
     </div>
   </section>
 </main>
@@ -434,6 +444,17 @@ let voteSubmitted = false;
 let turnstileLoadFailed = false;
 let resultsLoading = false;
 let resultsLoaded = false;
+let statesLoading = false;
+let stateFeedAvailable = false;
+
+const NIGERIAN_STATES = [
+  "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa",
+  "Benue", "Borno", "Cross River", "Delta", "Ebonyi", "Edo",
+  "Ekiti", "Enugu", "Gombe", "Imo", "Jigawa", "Kaduna", "Kano",
+  "Katsina", "Kebbi", "Kogi", "Kwara", "Lagos", "Nasarawa",
+  "Niger", "Ogun", "Ondo", "Osun", "Oyo", "Plateau", "Rivers",
+  "Sokoto", "Taraba", "Yobe", "Zamfara", "Federal Capital Territory"
+];
 
 const $ = id => document.getElementById(id);
 $("year").textContent = new Date().getFullYear();
@@ -841,6 +862,163 @@ function formatTimestamp(date) {
   }).format(date);
 }
 
+function normalizeStateName(value) {
+  if (typeof value !== "string") return null;
+  const normalized = value
+    .normalize("NFKC")
+    .trim()
+    .toLocaleLowerCase()
+    .replace(/[._,-]+/g, " ")
+    .replace(/[()]/g, "")
+    .replace(/\s+/g, " ")
+    .replace(/\s+state$/, "");
+  const aliases = {
+    "abuja": "Federal Capital Territory",
+    "abuja fct": "Federal Capital Territory",
+    "f c t": "Federal Capital Territory",
+    "fct": "Federal Capital Territory",
+    "fct abuja": "Federal Capital Territory",
+    "federal capital territory abuja": "Federal Capital Territory",
+    "federal capital territory fct": "Federal Capital Territory",
+    "akwaibom": "Akwa Ibom",
+    "crossriver": "Cross River",
+    "nassarawa": "Nasarawa"
+  };
+  if (Object.prototype.hasOwnProperty.call(aliases, normalized)) {
+    return aliases[normalized];
+  }
+  return NIGERIAN_STATES.find(state =>
+    state.toLocaleLowerCase() === normalized
+  ) || null;
+}
+
+function renderStateRows(counts, feedAvailable) {
+  const list = $("state-results-list");
+  list.replaceChildren();
+  const total = feedAvailable
+    ? [...counts.values()].reduce((sum, value) => sum + value, 0)
+    : 0;
+  NIGERIAN_STATES.forEach(state => {
+    const count = feedAvailable ? (counts.get(state) || 0) : null;
+    const row = document.createElement("tr");
+    const nameCell = document.createElement("th");
+    nameCell.scope = "row";
+    nameCell.textContent = state;
+    const countCell = document.createElement("td");
+    countCell.textContent = count === null ? "—" : count.toLocaleString();
+    const shareCell = document.createElement("td");
+    shareCell.textContent = count === null || total === 0
+      ? "—"
+      : ((count / total) * 100).toFixed(1) + "%";
+    row.append(nameCell, countCell, shareCell);
+    list.appendChild(row);
+  });
+}
+
+function stateCount(row) {
+  const raw = firstValue(row, [
+    "participation_count", "count", "total", "submission_count", "records"
+  ], null);
+  if (raw === null || raw === "") return null;
+  const value = Number(raw);
+  return Number.isSafeInteger(value) && value >= 0 ? value : null;
+}
+
+async function loadStateParticipation() {
+  if (!db || statesLoading) return;
+  statesLoading = true;
+  const button = $("refresh-states");
+  const status = $("state-message");
+  button.disabled = true;
+  button.setAttribute("aria-busy", "true");
+  button.textContent = "Refreshing…";
+  status.className = "state-loading";
+  status.textContent = "Loading state participation…";
+
+  try {
+    const { data, error } = await db.rpc("get_state_participation");
+    if (error) throw error;
+    const rows = normalizeRows(data);
+    const counts = new Map(NIGERIAN_STATES.map(state => [state, 0]));
+    let invalidRows = 0;
+    rows.forEach(row => {
+      if (!row || typeof row !== "object" || Array.isArray(row)) {
+        invalidRows += 1;
+        return;
+      }
+      const state = normalizeStateName(firstValue(row, [
+        "state_name", "state", "state_code", "location"
+      ], null));
+      const count = stateCount(row);
+      if (!state || count === null) {
+        invalidRows += 1;
+        return;
+      }
+      counts.set(state, counts.get(state) + count);
+    });
+    if (rows.length > 0 && invalidRows === rows.length) {
+      throw new Error("The state-participation feed returned no valid aggregate rows.");
+    }
+
+    stateFeedAvailable = true;
+    renderStateRows(counts, true);
+    const total = [...counts.values()].reduce((sum, count) => sum + count, 0);
+    $("state-total").textContent = total.toLocaleString();
+
+    if (total > 0) {
+      const ranked = NIGERIAN_STATES.map(state => ({
+        state,
+        count: counts.get(state)
+      })).sort((a, b) => b.count - a.count || a.state.localeCompare(b.state));
+      const highest = ranked[0].count;
+      const highestStates = ranked
+        .filter(item => item.count === highest)
+        .map(item => item.state);
+      $("state-highest").textContent = highestStates.length > 1
+        ? highest.toLocaleString() + " · " + highestStates.length + " locations tied"
+        : highestStates[0] + " · " + highest.toLocaleString();
+      const lowest = ranked[ranked.length - 1].count;
+      const lowestStates = ranked
+        .filter(item => item.count === lowest)
+        .map(item => item.state);
+      $("state-lowest").textContent =
+        lowestStates.length > 1
+          ? lowest.toLocaleString() + " · " + lowestStates.length + " locations tied"
+          : lowestStates[0] + " · " + lowest.toLocaleString();
+      status.className = invalidRows ? "state-error" : "state-empty";
+      status.textContent = invalidRows
+        ? "Some unrecognized or invalid aggregate rows were omitted; totals and shares use only valid returned state records."
+        : "Counts include only valid records returned for this website.";
+    } else {
+      $("state-highest").textContent = "—";
+      $("state-lowest").textContent = "—";
+      status.className = "state-empty";
+      status.textContent = "No participation data available yet. Zero recorded participation does not mean zero real-world participation.";
+    }
+
+    $("state-updated").textContent =
+      "Last successfully refreshed " + formatTimestamp(new Date()) + ".";
+  } catch (error) {
+    console.error("State participation query failed:", error);
+    if (!stateFeedAvailable) {
+      $("state-total").textContent = "—";
+      $("state-highest").textContent = "—";
+      $("state-lowest").textContent = "—";
+      renderStateRows(new Map(), false);
+      $("state-updated").textContent = "No successful state-data refresh yet.";
+    }
+    status.className = "state-error";
+    status.textContent = stateFeedAvailable
+      ? "The latest refresh failed. Showing the last successfully loaded aggregate data and its refresh time."
+      : "State participation data is unavailable. The aggregate state-data feed is not configured or could not be reached; no figures are being inferred.";
+  } finally {
+    statesLoading = false;
+    button.disabled = false;
+    button.textContent = "↻ Refresh";
+    button.removeAttribute("aria-busy");
+  }
+}
+
 async function loadResults() {
   if (!db || resultsLoading) return;
   resultsLoading = true;
@@ -917,12 +1095,16 @@ async function loadResults() {
 
         const title = document.createElement("div");
         title.className = "result-name";
+        const serial = document.createElement("span");
+        serial.className = "result-serial";
+        serial.setAttribute("aria-label", "Serial number " + (index + 1));
+        serial.textContent = String(index + 1) + ".";
         const rankLabel = document.createElement("span");
         rankLabel.className = "result-rank";
         rankLabel.textContent = "#" + rank;
         const name = document.createElement("span");
         name.textContent = " " + getCandidateName(row);
-        title.append(rankLabel, name);
+        title.append(serial, rankLabel, name);
 
         const party = document.createElement("div");
         party.className = "result-votes";
@@ -1055,7 +1237,10 @@ async function submitVote() {
     resetTurnstile();
     updateButton();
 
-    await loadResults();
+    await Promise.allSettled([
+      loadResults(),
+      loadStateParticipation()
+    ]);
   } catch (error) {
     console.error("Vote submission failed:", error);
 
@@ -1074,90 +1259,126 @@ async function submitVote() {
 }
 
 const POLL_SHARE_URL = "https://whoyouchoose.netlify.app/";
-const QUIZ_QUESTIONS = [
-  {
-    question: "On what date did Nigeria become independent?",
-    options: ["1 October 1960", "1 October 1963", "29 May 1999", "1 January 1914"],
-    answer: 0,
-    explanation: "Nigeria became independent from British rule on 1 October 1960."
-  },
-  {
-    question: "What is the name of Nigeria’s supreme legal document?",
-    options: ["The National Assembly Standing Orders", "The Constitution of the Federal Republic of Nigeria", "The Electoral Act alone", "The African Charter"],
-    answer: 1,
-    explanation: "The Constitution of the Federal Republic of Nigeria establishes the structure and powers of government and protects fundamental rights."
-  },
-  {
-    question: "Which branch of the federal government is responsible for making laws?",
-    options: ["The executive", "The legislature", "The judiciary", "The civil service"],
-    answer: 1,
-    explanation: "At the federal level, legislative powers are vested in the National Assembly under the Constitution."
-  },
-  {
-    question: "Which two chambers make up Nigeria’s National Assembly?",
-    options: ["The Senate and House of Representatives", "The Supreme Court and Senate", "The Federal Executive Council and Senate", "The House of Assembly and Cabinet"],
-    answer: 0,
-    explanation: "Nigeria’s National Assembly is bicameral: it consists of the Senate and the House of Representatives."
-  },
-  {
-    question: "What is a central role of the judiciary?",
-    options: ["Conducting elections", "Interpreting and applying the law", "Passing the federal budget", "Appointing state governors"],
-    answer: 1,
-    explanation: "Courts interpret and apply the law and resolve disputes brought before them."
-  },
-  {
-    question: "Who heads the executive branch of Nigeria’s federal government?",
-    options: ["The Chief Justice of Nigeria", "The President", "The Senate President", "The Speaker of the House of Representatives"],
-    answer: 1,
-    explanation: "The Constitution vests federal executive power in the President."
-  },
-  {
-    question: "Which city is Nigeria’s Federal Capital Territory centred on?",
-    options: ["Lagos", "Kaduna", "Abuja", "Jos"],
-    answer: 2,
-    explanation: "Abuja is the capital city of the Federal Capital Territory."
-  },
-  {
-    question: "How many states does Nigeria have, alongside the Federal Capital Territory?",
-    options: ["30", "36", "37 states and no FCT", "40"],
-    answer: 1,
-    explanation: "Nigeria is made up of 36 states and the Federal Capital Territory."
-  },
-  {
-    question: "Which institution is constitutionally responsible for organising federal and state elections?",
-    options: ["The National Assembly", "The Independent National Electoral Commission (INEC)", "The Federal Ministry of Justice", "The National Population Commission"],
-    answer: 1,
-    explanation: "INEC is the constitutionally established body responsible for organising and conducting the elections assigned to it."
-  },
-  {
-    question: "What does a secret ballot protect?",
-    options: ["The privacy of a voter’s choice", "The public release of every voter’s choice", "A candidate’s party membership", "The counting of ballots from public observation"],
-    answer: 0,
-    explanation: "A secret ballot is designed to keep each voter’s choice private."
-  },
-  {
-    question: "Which statement best describes the separation of powers?",
-    options: ["All public power is held by one branch", "Government responsibilities are distributed among branches", "Courts organise political parties", "States do not have their own governments"],
-    answer: 1,
-    explanation: "The Constitution distributes government powers among the executive, legislature, and judiciary, with checks and balances."
-  },
-  {
-    question: "Which is an example of civic participation beyond voting?",
-    options: ["Learning about public issues and contacting elected representatives", "Sharing someone else’s private ballot", "Claiming an unverified result is official", "Preventing others from expressing an opinion"],
-    answer: 0,
-    explanation: "Civic participation includes informed discussion, peaceful engagement, and communicating with public representatives."
-  }
-];
+const QUIZ_SESSION_SIZE = 12;
+let quizBank = null;
 
 const quizState = {
+  session: [],
   index: 0,
   score: 0,
   selected: null,
   answered: false
 };
 
+function shuffleInPlace(items) {
+  for (let index = items.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [items[index], items[randomIndex]] = [items[randomIndex], items[index]];
+  }
+  return items;
+}
+
+function makeQuizSession() {
+  return shuffleInPlace([...quizBank.questions])
+    .slice(0, Math.min(QUIZ_SESSION_SIZE, quizBank.questions.length))
+    .map(question => {
+      const options = shuffleInPlace(question.options.map((text, index) => ({
+        text,
+        correct: index === question.answer
+      })));
+      return {
+        ...question,
+        options,
+        answer: options.findIndex(option => option.correct),
+        sourceDetails: quizBank.sources[question.source]
+      };
+    });
+}
+
+function startQuizSession() {
+  quizState.session = makeQuizSession();
+  quizState.index = 0;
+  quizState.score = 0;
+  quizState.selected = null;
+  quizState.answered = false;
+  $("quiz-retry").hidden = true;
+  clearMessage("quiz-share-message");
+  renderQuiz();
+}
+
+function validateQuizBank(payload) {
+  if (
+    !payload ||
+    !Array.isArray(payload.questions) ||
+    payload.questions.length !== 100 ||
+    !payload.sources ||
+    typeof payload.sources !== "object"
+  ) {
+    throw new Error("The civic quiz bank must contain 100 questions and source references.");
+  }
+
+  const seenQuestions = new Set();
+  payload.questions.forEach(question => {
+    const key = typeof question?.question === "string"
+      ? question.question.trim().toLocaleLowerCase()
+      : "";
+    if (
+      !key ||
+      seenQuestions.has(key) ||
+      !Array.isArray(question.options) ||
+      question.options.length !== 4 ||
+      !Number.isInteger(question.answer) ||
+      question.answer < 0 ||
+      question.answer >= question.options.length ||
+      typeof question.explanation !== "string" ||
+      !payload.sources[question.source]
+    ) {
+      throw new Error("The civic quiz bank contains an invalid or repeated question.");
+    }
+    seenQuestions.add(key);
+  });
+
+  return payload;
+}
+
+async function loadQuizBank() {
+  const retryButton = $("quiz-retry");
+  const nextButton = $("quiz-next");
+  retryButton.hidden = true;
+  nextButton.hidden = true;
+  $("quiz-progress").textContent = "Loading question bank…";
+  $("quiz-question").hidden = true;
+  $("quiz-options").hidden = true;
+  $("quiz-feedback").hidden = true;
+  $("quiz-finish").hidden = true;
+
+  try {
+    const response = await fetch("./civic-quiz.json", { cache: "no-cache" });
+    if (!response.ok) {
+      throw new Error("Question bank request failed (HTTP " + response.status + ").");
+    }
+    quizBank = validateQuizBank(await response.json());
+    startQuizSession();
+  } catch (error) {
+    console.error("Civic quiz bank could not be loaded:", error);
+    $("quiz-progress").textContent = "Question bank unavailable";
+    $("quiz-score").textContent = "Score: 0";
+    $("quiz-question").hidden = true;
+    $("quiz-options").hidden = true;
+    $("quiz-next").hidden = true;
+    $("quiz-finish").hidden = true;
+    const feedback = $("quiz-feedback");
+    feedback.className = "quiz-feedback info";
+    feedback.textContent = "The question bank could not be loaded. Check your connection and retry.";
+    feedback.hidden = false;
+    retryButton.hidden = false;
+    $("quiz-progress-fill").style.width = "0%";
+  }
+}
+
 function renderQuiz() {
-  const finished = quizState.index >= QUIZ_QUESTIONS.length;
+  const sessionSize = quizState.session.length;
+  const finished = quizState.index >= sessionSize;
   const finish = $("quiz-finish");
   const questionHeading = $("quiz-question");
   const optionsContainer = $("quiz-options");
@@ -1168,9 +1389,9 @@ function renderQuiz() {
   $("quiz-score").textContent = "Score: " + quizState.score;
   $("quiz-progress").textContent = finished
     ? "Quiz complete"
-    : "Question " + (quizState.index + 1) + " of " + QUIZ_QUESTIONS.length;
+    : "Question " + (quizState.index + 1) + " of " + sessionSize;
   progressFill.style.width =
-    (finished ? 100 : (quizState.index / QUIZ_QUESTIONS.length) * 100) + "%";
+    (finished ? 100 : (quizState.index / sessionSize) * 100) + "%";
 
   if (finished) {
     questionHeading.hidden = true;
@@ -1179,15 +1400,15 @@ function renderQuiz() {
     nextButton.hidden = true;
     finish.hidden = false;
     $("quiz-final-score").textContent =
-      "You scored " + quizState.score + " out of " + QUIZ_QUESTIONS.length + ".";
+      "You scored " + quizState.score + " out of " + sessionSize + ".";
     $("quiz-final-message").textContent =
-      quizState.score === QUIZ_QUESTIONS.length
+      quizState.score === sessionSize
         ? "Excellent work. You got every question right."
         : "Thanks for taking part. You can play again to review the questions.";
     return;
   }
 
-  const current = QUIZ_QUESTIONS[quizState.index];
+  const current = quizState.session[quizState.index];
   questionHeading.hidden = false;
   questionHeading.textContent = current.question;
   optionsContainer.hidden = false;
@@ -1210,32 +1431,40 @@ function renderQuiz() {
     input.disabled = quizState.answered;
     input.addEventListener("change", () => answerQuiz(optionIndex));
     const text = document.createElement("span");
-    text.textContent = option;
+    text.textContent = option.text;
     label.append(input, text);
     optionsContainer.appendChild(label);
   });
 
   if (quizState.answered) {
     nextButton.disabled = false;
-    nextButton.textContent = quizState.index === QUIZ_QUESTIONS.length - 1
+    nextButton.textContent = quizState.index === sessionSize - 1
       ? "See your score"
       : "Next question";
     feedback.hidden = false;
     feedback.className = "quiz-feedback " +
       (quizState.selected === current.answer ? "success" : "info");
-    feedback.textContent =
+    feedback.replaceChildren(document.createTextNode(
       (quizState.selected === current.answer ? "Correct. " : "Not quite. ") +
-      "Answer: " + current.options[current.answer] + ". " + current.explanation;
+      "Answer: " + current.options[current.answer].text + ". " + current.explanation + " "
+    ));
+    const sourceLink = document.createElement("a");
+    sourceLink.className = "quiz-source";
+    sourceLink.href = current.sourceDetails.url;
+    sourceLink.target = "_blank";
+    sourceLink.rel = "noopener noreferrer";
+    sourceLink.textContent = "Source: " + current.sourceDetails.title;
+    feedback.appendChild(sourceLink);
   }
 }
 
 function answerQuiz(optionIndex) {
   if (quizState.answered || !Number.isInteger(optionIndex)) return;
-  const current = QUIZ_QUESTIONS[quizState.index];
+  const current = quizState.session[quizState.index];
   if (!current || optionIndex < 0 || optionIndex >= current.options.length) return;
   quizState.selected = optionIndex;
   quizState.answered = true;
-  if (optionIndex === current.answer) quizState.score += 1;
+  if (current.options[optionIndex].correct) quizState.score += 1;
   renderQuiz();
 }
 
@@ -1248,12 +1477,7 @@ function advanceQuiz() {
 }
 
 function restartQuiz() {
-  quizState.index = 0;
-  quizState.score = 0;
-  quizState.selected = null;
-  quizState.answered = false;
-  clearMessage("quiz-share-message");
-  renderQuiz();
+  startQuizSession();
   $("quiz-question").focus();
 }
 
@@ -1311,7 +1535,7 @@ async function copyPollLink() {
 
 async function shareQuizScore() {
   const scoreText =
-    "I scored " + quizState.score + " out of " + QUIZ_QUESTIONS.length +
+    "I scored " + quizState.score + " out of " + quizState.session.length +
     " on the WhoYouChoose Nigerian civic-knowledge quiz. Try it here: " +
     POLL_SHARE_URL + "#civic-quiz";
   try {
@@ -1332,7 +1556,7 @@ async function shareQuizScore() {
   } catch (error) {
     if (error?.name !== "AbortError") {
       message("quiz-share-message", "Your score could not be shared. You scored " +
-        quizState.score + " out of " + QUIZ_QUESTIONS.length + ".", "error");
+        quizState.score + " out of " + quizState.session.length + ".", "error");
     }
   }
 }
@@ -1483,13 +1707,15 @@ function initializeDatabase() {
 }
 
 $("refresh-results").addEventListener("click", loadResults);
+$("refresh-states").addEventListener("click", loadStateParticipation);
 $("submit-vote").addEventListener("click", submitVote);
 $("share-native").addEventListener("click", sharePollChoice);
 $("copy-poll-link").addEventListener("click", copyPollLink);
 $("quiz-next").addEventListener("click", advanceQuiz);
 $("quiz-restart").addEventListener("click", restartQuiz);
 $("quiz-share").addEventListener("click", shareQuizScore);
-renderQuiz();
+$("quiz-retry").addEventListener("click", loadQuizBank);
+loadQuizBank();
 
 $("retry-turnstile").addEventListener("click", () => {
   $("retry-turnstile").hidden = true;
@@ -1500,6 +1726,7 @@ window.addEventListener("online", () => {
   if (!db) return;
   loadCandidates();
   loadResults();
+  loadStateParticipation();
 });
 
 (async function startApp() {
@@ -1522,6 +1749,10 @@ window.addEventListener("online", () => {
 
     $("results-list").innerHTML =
       '<div class="empty">Poll results could not be loaded.</div>';
+    $("state-message").className = "state-error";
+    $("state-message").textContent =
+      "State participation data is unavailable because the database client could not start.";
+    renderStateRows(new Map(), false);
 
     message(
       "results-message",
@@ -1537,7 +1768,8 @@ window.addEventListener("online", () => {
 
   await Promise.allSettled([
     loadCandidates(),
-    loadResults()
+    loadResults(),
+    loadStateParticipation()
   ]);
 })();
 </script>
