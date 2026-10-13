@@ -349,7 +349,7 @@ footer p { max-width:800px; margin:7px auto; }
       <div>
         <p class="civic-kicker">Learn as you participate</p>
         <h2 id="quiz-heading">Nigerian Civic-Knowledge Quiz</h2>
-        <p class="sub">Each 12-question session draws at random from the 100-question, source-linked civic knowledge bank.</p>
+        <p class="sub">Each 12-question session draws at random from the 100-question, source-linked civic knowledge bank. Feedback distinguishes enduring facts from current election guidance; confirm time-sensitive rules with INEC.</p>
       </div>
     </div>
     <div class="panel quiz-panel" id="quiz-panel">
@@ -1312,9 +1312,10 @@ function validateQuizBank(payload) {
     !Array.isArray(payload.questions) ||
     payload.questions.length !== 100 ||
     !payload.sources ||
-    typeof payload.sources !== "object"
+    typeof payload.sources !== "object" ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(payload.verifiedAsOf || "")
   ) {
-    throw new Error("The civic quiz bank must contain 100 questions and source references.");
+    throw new Error("The civic quiz bank must contain 100 questions, source references, and a verification date.");
   }
 
   const seenQuestions = new Set();
@@ -1327,9 +1328,11 @@ function validateQuizBank(payload) {
       seenQuestions.has(key) ||
       !Array.isArray(question.options) ||
       question.options.length !== 4 ||
+      new Set(question.options.map(option => String(option).trim().toLocaleLowerCase())).size !== 4 ||
       !Number.isInteger(question.answer) ||
       question.answer < 0 ||
       question.answer >= question.options.length ||
+      (question.timeSensitive !== undefined && typeof question.timeSensitive !== "boolean") ||
       typeof question.explanation !== "string" ||
       !payload.sources[question.source]
     ) {
@@ -1454,7 +1457,12 @@ function renderQuiz() {
     sourceLink.target = "_blank";
     sourceLink.rel = "noopener noreferrer";
     sourceLink.textContent = "Source: " + current.sourceDetails.title;
-    feedback.appendChild(sourceLink);
+    const factStatus = document.createElement("span");
+    factStatus.className = "quiz-fact-status";
+    factStatus.textContent = current.timeSensitive
+      ? "Time-sensitive information · checked " + quizBank.verifiedAsOf + "; confirm with the official source for updates."
+      : "Enduring civic, historical, or constitutional fact.";
+    feedback.append(factStatus, sourceLink);
   }
 }
 

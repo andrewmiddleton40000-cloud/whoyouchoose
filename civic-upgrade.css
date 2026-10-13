@@ -665,6 +665,18 @@ footer p {
   color: #204831;
 }
 
+.quiz-fact-status {
+  display: block;
+  margin-top: 8px;
+  color: #52665a;
+  font-size: 12px;
+}
+
+.quiz-source {
+  display: inline-block;
+  margin-top: 6px;
+}
+
 .share-preview {
   padding: 22px;
   border: 1px solid #cbded0;
