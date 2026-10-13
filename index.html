@@ -7,6 +7,7 @@
 <meta name="theme-color" content="#073b2a">
 <title>WhoYouChoose | Nigeria Decides 2027</title>
 <meta name="description" content="An unofficial public opinion poll for Nigeria's 2027 presidential election.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 24'%3E%3Cpath fill='%23008751' d='M0 0h12v24H0zM24 0h12v24H24z'/%3E%3Cpath fill='white' d='M12 0h12v24H12z'/%3E%3C/svg%3E">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -84,6 +85,12 @@ h1 { font-size:clamp(32px,7vw,55px); line-height:1.08; margin:20px 0 15px; lette
   display:inline-flex;
   align-items:center;
   justify-content:center;
+  transition:transform .16s ease, box-shadow .16s ease, background-color .16s ease;
+}
+.btn:hover:not(:disabled) { transform:translateY(-1px); box-shadow:0 5px 14px #073b2a1a; }
+.btn:focus-visible, a:focus-visible, summary:focus-visible, select:focus-visible {
+  outline:3px solid #f1bf3a;
+  outline-offset:3px;
 }
 .white { background:white; color:var(--deep); }
 .green { background:var(--green); color:white; }
@@ -164,12 +171,15 @@ h2 { color:var(--deep); font-size:clamp(23px,4vw,30px); line-height:1.2; margin:
 .stat-label { color:var(--muted); font-size:12px; font-weight:bold; }
 .stat-value { color:var(--deep); font-size:25px; font-weight:bold; }
 .result-row { padding:15px 0; border-top:1px solid #edf1ed; }
+.result-rank { display:inline-block; min-width:34px; color:var(--green); font-weight:bold; }
 .result-top { display:flex; justify-content:space-between; gap:12px; margin-bottom:8px; }
 .result-name { font-size:14px; font-weight:bold; overflow-wrap:anywhere; }
 .result-votes { color:var(--muted); font-size:12px; }
 .percent { font-size:16px; font-weight:bold; color:var(--deep); white-space:nowrap; }
 .track { height:10px; background:#e9efea; border-radius:99px; overflow:hidden; }
 .fill { height:100%; background:linear-gradient(90deg,#087443,#17a667); border-radius:99px; }
+.results-updated { color:var(--muted); font-size:12px; margin:12px 0 0; }
+.results-caveat { color:var(--muted); font-size:12px; margin:12px 0 0; }
 .selected-box {
   border-radius:10px;
   background:var(--light);
@@ -213,7 +223,11 @@ footer p { max-width:800px; margin:7px auto; }
   .grid { grid-template-columns:1fr; }
   .photo { height:230px; }
 }
+@media(prefers-reduced-motion:reduce) {
+  *,*::before,*::after { scroll-behavior:auto !important; animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
+}
 </style>
+<link rel="stylesheet" href="./civic-upgrade.css">
 </head>
 
 <body>
@@ -225,7 +239,12 @@ footer p { max-width:800px; margin:7px auto; }
       </span>
       <span>WhoYouChoose</span>
     </div>
-    <a href="#results">View Results ↓</a>
+    <nav class="primary-nav" aria-label="Main navigation">
+      <a href="#vote">Vote</a>
+      <a href="#results">Results</a>
+      <a href="#civic-quiz">Civic Quiz</a>
+      <a href="#state-participation">State Participation</a>
+    </nav>
   </div>
 </header>
 
@@ -243,7 +262,7 @@ footer p { max-width:800px; margin:7px auto; }
 
 <div class="notice-wrap">
   <div class="notice">
-    <strong>Important:</strong> WhoYouChoose is an independent, unofficial public opinion poll. It is not affiliated with INEC or any political party and does not represent official election results. Online voting cannot guarantee one vote per person.
+    <strong>Important:</strong> WhoYouChoose is an independent, unofficial public opinion poll. It is not affiliated with INEC or any political party, does not represent official election results, and is not a reliable prediction of the 2027 election outcome. Online voting cannot guarantee one vote per person.
   </div>
 </div>
 
@@ -257,6 +276,7 @@ footer p { max-width:800px; margin:7px auto; }
       <span class="status" id="candidate-count">Loading candidates…</span>
     </div>
     <div id="candidate-message" class="message" role="status"></div>
+    <div id="candidate-retry-slot" class="retry-slot"></div>
     <div id="candidate-grid" class="grid">
       <div class="loading">Loading candidates…</div>
     </div>
@@ -282,6 +302,22 @@ footer p { max-width:800px; margin:7px auto; }
     </div>
   </section>
 
+  <section class="section share-panel-section" id="share-choice" hidden aria-labelledby="share-heading">
+    <div class="panel civic-share-panel">
+      <div>
+        <p class="civic-kicker">Thank you for participating</p>
+        <h2 id="share-heading">Share Your Choice</h2>
+        <p class="sub">Invite others to share their opinions. Sharing a link does not mean someone has voted.</p>
+      </div>
+      <div class="share-actions">
+        <button id="share-native" class="btn green" type="button">Share your choice</button>
+        <a id="share-whatsapp" class="btn outline" href="https://wa.me/" target="_blank" rel="noopener noreferrer">Share on WhatsApp</a>
+        <button id="copy-poll-link" class="btn outline" type="button">Copy poll link</button>
+      </div>
+      <p id="share-message" class="message" role="status" aria-live="polite"></p>
+    </div>
+  </section>
+
   <section class="section" id="results">
     <div class="heading">
       <div>
@@ -293,7 +329,7 @@ footer p { max-width:800px; margin:7px auto; }
     <div class="panel">
       <div class="stats">
         <div class="stat">
-          <div class="stat-label">Total votes recorded</div>
+          <div class="stat-label">Overall votes (when provided)</div>
           <div class="stat-value" id="total-votes">—</div>
         </div>
         <div class="stat">
@@ -303,12 +339,65 @@ footer p { max-width:800px; margin:7px auto; }
       </div>
       <div id="results-message" class="message" role="status"></div>
       <div id="results-list"><div class="loading">Loading poll results…</div></div>
+      <p id="results-updated" class="results-updated" aria-live="polite">Results have not been refreshed yet.</p>
+      <p class="results-caveat">These percentages reflect the records returned for this website only. Candidate share is calculated among returned counts when the results service does not provide an overall total.</p>
+    </div>
+  </section>
+
+  <section class="section" id="civic-quiz" aria-labelledby="quiz-heading">
+    <div class="heading">
+      <div>
+        <p class="civic-kicker">Learn as you participate</p>
+        <h2 id="quiz-heading">Nigerian Civic-Knowledge Quiz</h2>
+        <p class="sub">A short, non-partisan quiz about Nigeria's history, Constitution, and democratic institutions.</p>
+      </div>
+    </div>
+    <div class="panel quiz-panel" id="quiz-panel">
+      <div class="quiz-progress-row">
+        <span id="quiz-progress">Question 1 of 12</span>
+        <span id="quiz-score">Score: 0</span>
+      </div>
+      <div class="quiz-progress-track" aria-hidden="true"><div id="quiz-progress-fill" class="quiz-progress-fill"></div></div>
+      <h3 id="quiz-question" class="quiz-question" tabindex="-1"></h3>
+      <div id="quiz-options" class="quiz-options" role="group" aria-labelledby="quiz-question"></div>
+      <div id="quiz-feedback" class="quiz-feedback" role="status" aria-live="polite" hidden></div>
+      <div class="quiz-controls">
+        <button id="quiz-next" class="btn green" type="button" disabled>Check answer</button>
+      </div>
+      <div id="quiz-finish" class="quiz-finish" hidden>
+        <p id="quiz-final-score" class="quiz-final-score"></p>
+        <p id="quiz-final-message" class="sub"></p>
+        <div class="share-actions">
+          <button id="quiz-share" class="btn outline" type="button">Share your score</button>
+          <button id="quiz-restart" class="btn green" type="button">Play again</button>
+        </div>
+        <p id="quiz-share-message" class="message" role="status" aria-live="polite"></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="state-participation" aria-labelledby="state-heading">
+    <div class="heading">
+      <div>
+        <p class="civic-kicker">Transparent by design</p>
+        <h2 id="state-heading">State Participation</h2>
+        <p class="sub">This poll does not currently collect or report state-level voting data.</p>
+      </div>
+    </div>
+    <div class="panel state-panel">
+      <p class="state-notice" role="note"><strong>State participation tracking is not available yet.</strong> No state totals or state-level candidate rankings are available. Your location is not inferred, and no state information is added to a vote.</p>
+      <details class="state-list-details">
+        <summary>Nigeria’s 36 states and the Federal Capital Territory</summary>
+        <ul id="state-list" class="state-list">
+          <li>Abia</li><li>Adamawa</li><li>Akwa Ibom</li><li>Anambra</li><li>Bauchi</li><li>Bayelsa</li><li>Benue</li><li>Borno</li><li>Cross River</li><li>Delta</li><li>Ebonyi</li><li>Edo</li><li>Ekiti</li><li>Enugu</li><li>Gombe</li><li>Imo</li><li>Jigawa</li><li>Kaduna</li><li>Kano</li><li>Katsina</li><li>Kebbi</li><li>Kogi</li><li>Kwara</li><li>Lagos</li><li>Nasarawa</li><li>Niger</li><li>Ogun</li><li>Ondo</li><li>Osun</li><li>Oyo</li><li>Plateau</li><li>Rivers</li><li>Sokoto</li><li>Taraba</li><li>Yobe</li><li>Zamfara</li><li>Federal Capital Territory</li>
+        </ul>
+      </details>
     </div>
   </section>
 </main>
 
 <footer>
-  <div class="footer-brand">WhoYouChoose 🇳🇬</div>
+  <div class="footer-brand">WhoYouChoose</div>
   <p>An independent public opinion poll about Nigeria's 2027 presidential election.</p>
   <p>This website is not operated by INEC, the Nigerian government, or any political party.</p>
   <p>© <span id="year"></span> WhoYouChoose. Public opinion is not an election result.</p>
@@ -336,12 +425,15 @@ const candidatePhotos = {
 
 let db = null;
 let candidates = [];
+let candidatesLoading = false;
 let selectedCandidateId = null;
 let turnstileToken = "";
 let turnstileWidgetId = null;
 let isSubmitting = false;
 let voteSubmitted = false;
 let turnstileLoadFailed = false;
+let resultsLoading = false;
+let resultsLoaded = false;
 
 const $ = id => document.getElementById(id);
 $("year").textContent = new Date().getFullYear();
@@ -354,6 +446,15 @@ function message(id, text, type = "info") {
 function clearMessage(id) {
   $(id).textContent = "";
   $(id).className = "message";
+}
+
+function appendReloadButton(container) {
+  const retry = document.createElement("button");
+  retry.type = "button";
+  retry.className = "btn outline";
+  retry.textContent = "Reload site";
+  retry.addEventListener("click", () => window.location.reload());
+  container.append(document.createTextNode(" "), retry);
 }
 
 function firstValue(row, keys, fallback = null) {
@@ -394,18 +495,84 @@ function getCandidateParty(row) {
 }
 
 function getVotes(row) {
-  const value = Number(
-    firstValue(row, ["votes", "vote_count", "total_votes", "count", "votes_count"], 0)
+  const raw = firstValue(
+    row,
+    ["votes", "vote_count", "total_votes", "count", "votes_count"],
+    null
   );
-  return Number.isFinite(value) && value >= 0 ? value : 0;
+  if (raw === null) {
+    throw new Error("A results row is missing its vote count.");
+  }
+  const value = Number(raw);
+  if (!Number.isFinite(value) || value < 0) {
+    throw new Error("A results row contains an invalid vote count.");
+  }
+  return value;
 }
 
 function normalizeRows(data) {
   if (Array.isArray(data)) return data;
-  if (data && Array.isArray(data.data)) return data.data;
-  if (data && Array.isArray(data.rows)) return data.rows;
-  if (data && Array.isArray(data.results)) return data.results;
-  return [];
+  if (data === null || data === undefined) return [];
+  if (data && typeof data === "object") {
+    for (const key of ["data", "rows", "results", "candidates", "items"]) {
+      if (Array.isArray(data[key])) return data[key];
+    }
+  }
+  throw new Error("The database returned an unexpected response format.");
+}
+
+function extractExplicitTotal(data, rows) {
+  const totalKeys = [
+    "poll_total",
+    "overall_total",
+    "overall_votes",
+    "total_vote_count",
+    "vote_total",
+    "votes_total",
+    "all_votes"
+  ];
+  const wrapperTotalKeys = [...totalKeys, "total_votes", "total_count", "total", "totalVotes"];
+  const parseTotal = value => {
+    if (value === null || value === undefined || value === "") return null;
+    const total = Number(value);
+    if (!Number.isFinite(total) || total < 0) {
+      throw new Error("The results service returned an invalid overall total.");
+    }
+    return total;
+  };
+  const readTotal = (source, keys) => {
+    for (const key of keys) {
+      if (Object.prototype.hasOwnProperty.call(source, key)) {
+        const parsed = parseTotal(source[key]);
+        if (parsed !== null) return parsed;
+      }
+    }
+    return null;
+  };
+
+  if (data && !Array.isArray(data) && typeof data === "object") {
+    const wrapperTotal = readTotal(data, wrapperTotalKeys);
+    if (wrapperTotal !== null) return wrapperTotal;
+
+    for (const key of ["summary", "meta", "totals"]) {
+      const nested = data[key];
+      if (nested && typeof nested === "object") {
+        const nestedTotal = readTotal(nested, wrapperTotalKeys);
+        if (nestedTotal !== null) return nestedTotal;
+      }
+    }
+  }
+
+  const repeatedTotals = rows
+    .map(row => readTotal(row, totalKeys))
+    .filter(value => value !== null);
+  if (repeatedTotals.length && !repeatedTotals.every(value => value === repeatedTotals[0])) {
+    throw new Error("The results service returned conflicting overall totals.");
+  }
+  if (repeatedTotals.length) {
+    return repeatedTotals[0];
+  }
+  return null;
 }
 
 function initials(name) {
@@ -444,9 +611,20 @@ function updateButton() {
   );
 
   button.disabled = !selectedRow ||
+    candidatesLoading ||
     !turnstileToken ||
     isSubmitting ||
     voteSubmitted;
+
+  document.querySelectorAll(".choose").forEach(candidateButton => {
+    const card = candidateButton.closest(".card");
+    const row = candidates.find(candidate =>
+      String(getCandidateId(candidate)) === card?.dataset.key
+    );
+    candidateButton.disabled =
+      isSubmitting || voteSubmitted || candidatesLoading ||
+      !row || getCandidateId(row) === null;
+  });
 
   if (isSubmitting) {
     button.textContent = "Submitting vote…";
@@ -483,7 +661,10 @@ function selectCandidate(id) {
     card.classList.toggle("selected", selected);
 
     const button = card.querySelector(".choose");
-    if (button) button.textContent = selected ? "✓ Selected" : "Choose Candidate";
+    if (button) {
+      button.textContent = selected ? "Selected" : "Choose candidate";
+      button.setAttribute("aria-pressed", String(selected));
+    }
 
     const note = card.querySelector(".selected-note");
     if (note) note.textContent = selected ? "Your current selection" : "";
@@ -496,6 +677,7 @@ function selectCandidate(id) {
 function renderCandidates() {
   const grid = $("candidate-grid");
   grid.replaceChildren();
+  $("candidate-retry-slot").replaceChildren();
 
   $("candidate-count").textContent =
     candidates.length + " candidate" + (candidates.length === 1 ? "" : "s");
@@ -506,7 +688,16 @@ function renderCandidates() {
     grid.innerHTML =
       '<div class="empty">No candidate records were returned. Check the get_poll_candidates function.</div>';
     message("candidate-message", "The database returned no candidate rows.", "error");
+    updateButton();
     return;
+  }
+
+  if (
+    selectedCandidateId !== null &&
+    !candidates.some(row => String(getCandidateId(row)) === String(selectedCandidateId))
+  ) {
+    selectedCandidateId = null;
+    $("selected-candidate").textContent = "No candidate selected yet.";
   }
 
   clearMessage("candidate-message");
@@ -564,8 +755,9 @@ function renderCandidates() {
     const button = document.createElement("button");
     button.type = "button";
     button.className = "btn green choose";
-    button.textContent = "Choose Candidate";
+    button.textContent = "Choose candidate";
     button.disabled = voteSubmitted || id === null;
+    button.setAttribute("aria-pressed", "false");
     button.addEventListener("click", () => selectCandidate(id));
 
     const note = document.createElement("p");
@@ -576,131 +768,26 @@ function renderCandidates() {
     card.append(photo, body);
     grid.appendChild(card);
   });
-}
 
-async function loadCandidates() {
-  $("candidate-grid").innerHTML =
-    '<div class="loading">Loading candidates…</div>';
-  clearMessage("candidate-message");
-
-  const { data, error } = await db.rpc("get_poll_candidates");
-
-  if (error) {
-    console.error("Candidate query failed:", error);
-    $("candidate-grid").innerHTML =
-      '<div class="empty">Candidates could not be loaded. Please refresh.</div>';
-    message("candidate-message", "Candidate query failed: " + error.message, "error");
-    $("candidate-count").textContent = "Unavailable";
-    return;
-  }
-
-  candidates = normalizeRows(data);
-  renderCandidates();
-}
-
-
-async function loadResults() {
-  $("results-list").innerHTML =
-    '<div class="loading">Loading poll results…</div>';
-  clearMessage("results-message");
-
-  try {
-    const { data, error } = await db.rpc("get_poll_results");
-    if (error) throw error;
-
-    const rows = normalizeRows(data);
-    const total = rows.reduce((sum, row) => sum + getVotes(row), 0);
-    $("total-votes").textContent = total.toLocaleString();
-
-    const list = $("results-list");
-    list.replaceChildren();
-
-    if (!rows.length) {
-      list.innerHTML =
-        '<div class="empty">No result rows were returned by get_poll_results.</div>';
-      return;
-    }
-
-    rows.sort((a, b) => getVotes(b) - getVotes(a));
-
-    rows.forEach(row => {
-      const name = getCandidateName(row);
-      const party = getCandidateParty(row);
-      const votes = getVotes(row);
-
-      const suppliedPercent = firstValue(
-        row,
-        ["percentage", "vote_percentage", "percent", "percentage_of_votes"],
-        null
-      );
-
-      const parsedPercent =
-        suppliedPercent === null ? null : Number(suppliedPercent);
-
-      const percent =
-        parsedPercent !== null && Number.isFinite(parsedPercent)
-          ? Math.max(0, Math.min(100, parsedPercent))
-          : total > 0
-            ? (votes / total) * 100
-            : 0;
-
-      const item = document.createElement("div");
-      item.className = "result-row";
-
-      const top = document.createElement("div");
-      top.className = "result-top";
-
-      const left = document.createElement("div");
-
-      const title = document.createElement("div");
-      title.className = "result-name";
-      title.textContent = name;
-
-      const partyLabel = document.createElement("div");
-      partyLabel.className = "result-votes";
-      partyLabel.textContent =
-        party + " · " + votes.toLocaleString() +
-        " vote" + (votes === 1 ? "" : "s");
-
-      left.append(title, partyLabel);
-
-      const percentage = document.createElement("div");
-      percentage.className = "percent";
-      percentage.textContent = percent.toFixed(1) + "%";
-
-      top.append(left, percentage);
-
-      const track = document.createElement("div");
-      track.className = "track";
-
-      const fill = document.createElement("div");
-      fill.className = "fill";
-      fill.style.width = percent + "%";
-
-      track.appendChild(fill);
-      item.append(top, track);
-      list.appendChild(item);
-    });
-
-    clearMessage("results-message");
-  } catch (error) {
-    console.error("Results query failed:", error);
-    $("total-votes").textContent = "—";
-    $("results-list").innerHTML =
-      '<div class="empty">Results could not be loaded. Use Refresh to retry.</div>';
-    message(
-      "results-message",
-      "Results query failed: " + (error?.message || "Unknown error"),
-      "error"
-    );
+  if (
+    selectedCandidateId !== null &&
+    candidates.some(row => String(getCandidateId(row)) === String(selectedCandidateId))
+  ) {
+    selectCandidate(selectedCandidateId);
+  } else {
+    updateButton();
   }
 }
 
 async function loadCandidates() {
+  if (!db || candidatesLoading) return;
+  candidatesLoading = true;
   $("candidate-grid").innerHTML =
     '<div class="loading">Loading candidates…</div>';
   clearMessage("candidate-message");
+  $("candidate-retry-slot").replaceChildren();
   $("candidate-count").textContent = "Loading…";
+  updateButton();
 
   try {
     const { data, error } = await db.rpc("get_poll_candidates");
@@ -726,23 +813,172 @@ async function loadCandidates() {
     showCandidateRetry(
       "Candidate query failed: " + (error?.message || "Unknown error")
     );
+    selectedCandidateId = null;
+    $("selected-candidate").textContent = "No candidate selected yet.";
+  } finally {
+    candidatesLoading = false;
+    updateButton();
   }
 }
 
 function showCandidateRetry(text) {
   message("candidate-message", text, "error");
+  const retrySlot = $("candidate-retry-slot");
+  retrySlot.replaceChildren();
 
   const retry = document.createElement("button");
   retry.type = "button";
   retry.className = "btn outline";
-  retry.style.marginTop = "8px";
   retry.textContent = "↻ Retry candidates";
   retry.addEventListener("click", loadCandidates);
+  retrySlot.appendChild(retry);
+}
 
-  $("candidate-message").appendChild(
-    document.createTextNode(" ")
-  );
-  $("candidate-message").appendChild(retry);
+function formatTimestamp(date) {
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short"
+  }).format(date);
+}
+
+async function loadResults() {
+  if (!db || resultsLoading) return;
+  resultsLoading = true;
+  const refreshButton = $("refresh-results");
+  refreshButton.disabled = true;
+  refreshButton.textContent = "Refreshing…";
+  refreshButton.setAttribute("aria-busy", "true");
+  clearMessage("results-message");
+
+  if (!resultsLoaded) {
+    $("results-list").replaceChildren();
+    const loading = document.createElement("div");
+    loading.className = "loading";
+    loading.textContent = "Loading poll results…";
+    $("results-list").appendChild(loading);
+    $("total-votes").textContent = "—";
+  }
+
+  try {
+    const { data, error } = await db.rpc("get_poll_results");
+    if (error) throw error;
+
+    const rows = normalizeRows(data);
+    if (rows.some(row => !row || typeof row !== "object" || Array.isArray(row))) {
+      throw new Error("The results service returned an invalid candidate row.");
+    }
+
+    const countedRows = rows.map(row => ({
+      row,
+      votes: getVotes(row)
+    }));
+    const overallTotal = extractExplicitTotal(data, rows);
+    const returnedVotes = countedRows.reduce((sum, item) => sum + item.votes, 0);
+
+    if (overallTotal !== null && overallTotal < returnedVotes) {
+      throw new Error("The reported overall total is smaller than the returned candidate counts.");
+    }
+
+    countedRows.sort((a, b) =>
+      b.votes - a.votes ||
+      getCandidateName(a.row).localeCompare(getCandidateName(b.row))
+    );
+
+    $("total-votes").textContent =
+      overallTotal === null ? "—" : overallTotal.toLocaleString();
+    $("result-candidate-count").textContent = countedRows.length.toLocaleString();
+
+    const denominator = overallTotal !== null ? overallTotal : returnedVotes;
+    const list = $("results-list");
+    list.replaceChildren();
+
+    if (!countedRows.length) {
+      const empty = document.createElement("div");
+      empty.className = "empty";
+      empty.textContent = "No result rows were returned by get_poll_results.";
+      list.appendChild(empty);
+    } else {
+      let rank = 0;
+      let previousVotes = null;
+      countedRows.forEach((item, index) => {
+        const { row, votes } = item;
+        if (previousVotes === null || votes < previousVotes) rank = index + 1;
+        previousVotes = votes;
+
+        const percent = denominator > 0
+          ? Math.max(0, Math.min(100, (votes / denominator) * 100))
+          : 0;
+        const resultRow = document.createElement("div");
+        resultRow.className = "result-row";
+
+        const top = document.createElement("div");
+        top.className = "result-top";
+        const left = document.createElement("div");
+
+        const title = document.createElement("div");
+        title.className = "result-name";
+        const rankLabel = document.createElement("span");
+        rankLabel.className = "result-rank";
+        rankLabel.textContent = "#" + rank;
+        const name = document.createElement("span");
+        name.textContent = " " + getCandidateName(row);
+        title.append(rankLabel, name);
+
+        const party = document.createElement("div");
+        party.className = "result-votes";
+        party.textContent =
+          getCandidateParty(row) + " · " + votes.toLocaleString() +
+          " vote" + (votes === 1 ? "" : "s");
+        left.append(title, party);
+
+        const percentage = document.createElement("div");
+        percentage.className = "percent";
+        percentage.textContent = percent.toFixed(1) + "%";
+        top.append(left, percentage);
+
+        const track = document.createElement("div");
+        track.className = "track";
+        track.setAttribute("role", "progressbar");
+        track.setAttribute("aria-label", getCandidateName(row) + " share of returned results");
+        track.setAttribute("aria-valuemin", "0");
+        track.setAttribute("aria-valuemax", "100");
+        track.setAttribute("aria-valuenow", percent.toFixed(1));
+        const fill = document.createElement("div");
+        fill.className = "fill";
+        fill.style.width = percent + "%";
+        track.appendChild(fill);
+        resultRow.append(top, track);
+        list.appendChild(resultRow);
+      });
+    }
+
+    $("results-updated").textContent = "Last refreshed " + formatTimestamp(new Date()) + ".";
+    clearMessage("results-message");
+    resultsLoaded = true;
+  } catch (error) {
+    console.error("Results query failed:", error);
+    if (!resultsLoaded) {
+      $("total-votes").textContent = "—";
+      $("result-candidate-count").textContent = "—";
+      $("results-list").replaceChildren();
+      const unavailable = document.createElement("div");
+      unavailable.className = "empty";
+      unavailable.textContent = "Results could not be loaded. Use Refresh to retry.";
+      $("results-list").appendChild(unavailable);
+      $("results-updated").textContent = "No successful results refresh yet.";
+    }
+    message(
+      "results-message",
+      "Results could not be refreshed: " + (error?.message || "Unknown error") +
+        (resultsLoaded ? " The last successful results are still shown." : ""),
+      "error"
+    );
+  } finally {
+    resultsLoading = false;
+    refreshButton.disabled = false;
+    refreshButton.textContent = "↻ Refresh";
+    refreshButton.removeAttribute("aria-busy");
+  }
 }
 
 async function submitVote() {
@@ -809,6 +1045,7 @@ async function submitVote() {
       result.message || "Your opinion has been recorded. Thank you.",
       "success"
     );
+    showSharePanel();
 
     document.querySelectorAll(".choose").forEach(button => {
       button.disabled = true;
@@ -833,6 +1070,270 @@ async function submitVote() {
   } finally {
     isSubmitting = false;
     updateButton();
+  }
+}
+
+const POLL_SHARE_URL = "https://whoyouchoose.netlify.app/";
+const QUIZ_QUESTIONS = [
+  {
+    question: "On what date did Nigeria become independent?",
+    options: ["1 October 1960", "1 October 1963", "29 May 1999", "1 January 1914"],
+    answer: 0,
+    explanation: "Nigeria became independent from British rule on 1 October 1960."
+  },
+  {
+    question: "What is the name of Nigeria’s supreme legal document?",
+    options: ["The National Assembly Standing Orders", "The Constitution of the Federal Republic of Nigeria", "The Electoral Act alone", "The African Charter"],
+    answer: 1,
+    explanation: "The Constitution of the Federal Republic of Nigeria establishes the structure and powers of government and protects fundamental rights."
+  },
+  {
+    question: "Which branch of the federal government is responsible for making laws?",
+    options: ["The executive", "The legislature", "The judiciary", "The civil service"],
+    answer: 1,
+    explanation: "At the federal level, legislative powers are vested in the National Assembly under the Constitution."
+  },
+  {
+    question: "Which two chambers make up Nigeria’s National Assembly?",
+    options: ["The Senate and House of Representatives", "The Supreme Court and Senate", "The Federal Executive Council and Senate", "The House of Assembly and Cabinet"],
+    answer: 0,
+    explanation: "Nigeria’s National Assembly is bicameral: it consists of the Senate and the House of Representatives."
+  },
+  {
+    question: "What is a central role of the judiciary?",
+    options: ["Conducting elections", "Interpreting and applying the law", "Passing the federal budget", "Appointing state governors"],
+    answer: 1,
+    explanation: "Courts interpret and apply the law and resolve disputes brought before them."
+  },
+  {
+    question: "Who heads the executive branch of Nigeria’s federal government?",
+    options: ["The Chief Justice of Nigeria", "The President", "The Senate President", "The Speaker of the House of Representatives"],
+    answer: 1,
+    explanation: "The Constitution vests federal executive power in the President."
+  },
+  {
+    question: "Which city is Nigeria’s Federal Capital Territory centred on?",
+    options: ["Lagos", "Kaduna", "Abuja", "Jos"],
+    answer: 2,
+    explanation: "Abuja is the capital city of the Federal Capital Territory."
+  },
+  {
+    question: "How many states does Nigeria have, alongside the Federal Capital Territory?",
+    options: ["30", "36", "37 states and no FCT", "40"],
+    answer: 1,
+    explanation: "Nigeria is made up of 36 states and the Federal Capital Territory."
+  },
+  {
+    question: "Which institution is constitutionally responsible for organising federal and state elections?",
+    options: ["The National Assembly", "The Independent National Electoral Commission (INEC)", "The Federal Ministry of Justice", "The National Population Commission"],
+    answer: 1,
+    explanation: "INEC is the constitutionally established body responsible for organising and conducting the elections assigned to it."
+  },
+  {
+    question: "What does a secret ballot protect?",
+    options: ["The privacy of a voter’s choice", "The public release of every voter’s choice", "A candidate’s party membership", "The counting of ballots from public observation"],
+    answer: 0,
+    explanation: "A secret ballot is designed to keep each voter’s choice private."
+  },
+  {
+    question: "Which statement best describes the separation of powers?",
+    options: ["All public power is held by one branch", "Government responsibilities are distributed among branches", "Courts organise political parties", "States do not have their own governments"],
+    answer: 1,
+    explanation: "The Constitution distributes government powers among the executive, legislature, and judiciary, with checks and balances."
+  },
+  {
+    question: "Which is an example of civic participation beyond voting?",
+    options: ["Learning about public issues and contacting elected representatives", "Sharing someone else’s private ballot", "Claiming an unverified result is official", "Preventing others from expressing an opinion"],
+    answer: 0,
+    explanation: "Civic participation includes informed discussion, peaceful engagement, and communicating with public representatives."
+  }
+];
+
+const quizState = {
+  index: 0,
+  score: 0,
+  selected: null,
+  answered: false
+};
+
+function renderQuiz() {
+  const finished = quizState.index >= QUIZ_QUESTIONS.length;
+  const finish = $("quiz-finish");
+  const questionHeading = $("quiz-question");
+  const optionsContainer = $("quiz-options");
+  const feedback = $("quiz-feedback");
+  const nextButton = $("quiz-next");
+  const progressFill = $("quiz-progress-fill");
+
+  $("quiz-score").textContent = "Score: " + quizState.score;
+  $("quiz-progress").textContent = finished
+    ? "Quiz complete"
+    : "Question " + (quizState.index + 1) + " of " + QUIZ_QUESTIONS.length;
+  progressFill.style.width =
+    (finished ? 100 : (quizState.index / QUIZ_QUESTIONS.length) * 100) + "%";
+
+  if (finished) {
+    questionHeading.hidden = true;
+    optionsContainer.hidden = true;
+    feedback.hidden = true;
+    nextButton.hidden = true;
+    finish.hidden = false;
+    $("quiz-final-score").textContent =
+      "You scored " + quizState.score + " out of " + QUIZ_QUESTIONS.length + ".";
+    $("quiz-final-message").textContent =
+      quizState.score === QUIZ_QUESTIONS.length
+        ? "Excellent work. You got every question right."
+        : "Thanks for taking part. You can play again to review the questions.";
+    return;
+  }
+
+  const current = QUIZ_QUESTIONS[quizState.index];
+  questionHeading.hidden = false;
+  questionHeading.textContent = current.question;
+  optionsContainer.hidden = false;
+  feedback.hidden = true;
+  feedback.textContent = "";
+  finish.hidden = true;
+  nextButton.hidden = false;
+  nextButton.disabled = true;
+  nextButton.textContent = "Choose an answer";
+  optionsContainer.replaceChildren();
+
+  current.options.forEach((option, optionIndex) => {
+    const label = document.createElement("label");
+    label.className = "quiz-choice";
+    const input = document.createElement("input");
+    input.type = "radio";
+    input.name = "quiz-answer";
+    input.value = String(optionIndex);
+    input.checked = quizState.selected === optionIndex;
+    input.disabled = quizState.answered;
+    input.addEventListener("change", () => answerQuiz(optionIndex));
+    const text = document.createElement("span");
+    text.textContent = option;
+    label.append(input, text);
+    optionsContainer.appendChild(label);
+  });
+
+  if (quizState.answered) {
+    nextButton.disabled = false;
+    nextButton.textContent = quizState.index === QUIZ_QUESTIONS.length - 1
+      ? "See your score"
+      : "Next question";
+    feedback.hidden = false;
+    feedback.className = "quiz-feedback " +
+      (quizState.selected === current.answer ? "success" : "info");
+    feedback.textContent =
+      (quizState.selected === current.answer ? "Correct. " : "Not quite. ") +
+      "Answer: " + current.options[current.answer] + ". " + current.explanation;
+  }
+}
+
+function answerQuiz(optionIndex) {
+  if (quizState.answered || !Number.isInteger(optionIndex)) return;
+  const current = QUIZ_QUESTIONS[quizState.index];
+  if (!current || optionIndex < 0 || optionIndex >= current.options.length) return;
+  quizState.selected = optionIndex;
+  quizState.answered = true;
+  if (optionIndex === current.answer) quizState.score += 1;
+  renderQuiz();
+}
+
+function advanceQuiz() {
+  if (!quizState.answered) return;
+  quizState.index += 1;
+  quizState.selected = null;
+  quizState.answered = false;
+  renderQuiz();
+}
+
+function restartQuiz() {
+  quizState.index = 0;
+  quizState.score = 0;
+  quizState.selected = null;
+  quizState.answered = false;
+  clearMessage("quiz-share-message");
+  renderQuiz();
+  $("quiz-question").focus();
+}
+
+function pollShareText() {
+  return "I’ve made my choice on WhoYouChoose! Who would you choose for Nigeria in 2027? Share your opinion here: " +
+    POLL_SHARE_URL;
+}
+
+function showSharePanel() {
+  $("share-choice").hidden = false;
+  $("share-whatsapp").href =
+    "https://wa.me/?text=" + encodeURIComponent(pollShareText());
+  $("share-native").hidden = typeof navigator.share !== "function";
+}
+
+async function sharePollChoice() {
+  if (typeof navigator.share !== "function") {
+    message("share-message", "Native sharing is not available in this browser. Use WhatsApp or copy the link instead.", "info");
+    return;
+  }
+  try {
+    await navigator.share({
+      title: "WhoYouChoose | Nigeria Decides 2027",
+      text: pollShareText()
+    });
+    message("share-message", "Thanks for sharing the poll.", "success");
+  } catch (error) {
+    if (error?.name !== "AbortError") {
+      message("share-message", "The share sheet could not be opened. Try WhatsApp or copy the link.", "error");
+    }
+  }
+}
+
+async function copyPollLink() {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(POLL_SHARE_URL);
+    } else {
+      const field = document.createElement("textarea");
+      field.value = POLL_SHARE_URL;
+      field.setAttribute("readonly", "");
+      field.style.position = "fixed";
+      field.style.opacity = "0";
+      document.body.appendChild(field);
+      field.select();
+      const copied = document.execCommand("copy");
+      field.remove();
+      if (!copied) throw new Error("Clipboard access is unavailable.");
+    }
+    message("share-message", "Poll link copied.", "success");
+  } catch (error) {
+    message("share-message", "Could not copy the link. You can copy it from " + POLL_SHARE_URL, "error");
+  }
+}
+
+async function shareQuizScore() {
+  const scoreText =
+    "I scored " + quizState.score + " out of " + QUIZ_QUESTIONS.length +
+    " on the WhoYouChoose Nigerian civic-knowledge quiz. Try it here: " +
+    POLL_SHARE_URL + "#civic-quiz";
+  try {
+    if (typeof navigator.share === "function") {
+      await navigator.share({
+        title: "WhoYouChoose Civic-Knowledge Quiz",
+        text: scoreText
+      });
+      message("quiz-share-message", "Thanks for sharing your quiz score.", "success");
+    } else {
+      window.open(
+        "https://wa.me/?text=" + encodeURIComponent(scoreText),
+        "_blank",
+        "noopener,noreferrer"
+      );
+      message("quiz-share-message", "Opened WhatsApp with your quiz challenge.", "success");
+    }
+  } catch (error) {
+    if (error?.name !== "AbortError") {
+      message("quiz-share-message", "Your score could not be shared. You scored " +
+        quizState.score + " out of " + QUIZ_QUESTIONS.length + ".", "error");
+    }
   }
 }
 
@@ -869,6 +1370,7 @@ function initializeTurnstile() {
   }
 
   try {
+    turnstileToken = "";
     turnstileWidgetId = window.turnstile.render(
       "#turnstile-widget",
       {
@@ -931,7 +1433,10 @@ function loadTurnstileScript() {
     return;
   }
 
-  if (document.getElementById("cloudflare-turnstile-script")) return;
+  const existingScript = document.getElementById("cloudflare-turnstile-script");
+  if (existingScript && !turnstileLoadFailed) return;
+  if (existingScript) existingScript.remove();
+  turnstileLoadFailed = false;
 
   const script = document.createElement("script");
   script.id = "cloudflare-turnstile-script";
@@ -940,7 +1445,12 @@ function loadTurnstileScript() {
   script.async = true;
   script.defer = true;
 
+  script.onload = () => {
+    turnstileLoadFailed = false;
+  };
+
   script.onerror = () => {
+    turnstileLoadFailed = true;
     console.error("Cloudflare Turnstile script failed to load.");
 
     message(
@@ -950,6 +1460,7 @@ function loadTurnstileScript() {
     );
 
     $("retry-turnstile").hidden = false;
+    script.remove();
   };
 
   document.head.appendChild(script);
@@ -973,6 +1484,12 @@ function initializeDatabase() {
 
 $("refresh-results").addEventListener("click", loadResults);
 $("submit-vote").addEventListener("click", submitVote);
+$("share-native").addEventListener("click", sharePollChoice);
+$("copy-poll-link").addEventListener("click", copyPollLink);
+$("quiz-next").addEventListener("click", advanceQuiz);
+$("quiz-restart").addEventListener("click", restartQuiz);
+$("quiz-share").addEventListener("click", shareQuizScore);
+renderQuiz();
 
 $("retry-turnstile").addEventListener("click", () => {
   $("retry-turnstile").hidden = true;
@@ -988,12 +1505,6 @@ window.addEventListener("online", () => {
 (async function startApp() {
   try {
     initializeDatabase();
-
-    // These requests run independently of Cloudflare initialization.
-    await Promise.allSettled([
-      loadCandidates(),
-      loadResults()
-    ]);
   } catch (error) {
     console.error("Website initialization failed:", error);
 
@@ -1007,6 +1518,7 @@ window.addEventListener("online", () => {
       error?.message || "Database initialization failed.",
       "error"
     );
+    appendReloadButton($("candidate-retry-slot"));
 
     $("results-list").innerHTML =
       '<div class="empty">Poll results could not be loaded.</div>';
@@ -1016,10 +1528,17 @@ window.addEventListener("online", () => {
       error?.message || "Database initialization failed.",
       "error"
     );
-  } finally {
-    // Turnstile is deliberately initialized separately from data loading.
-    loadTurnstileScript();
+    appendReloadButton($("results-message"));
   }
+
+  // The security widget loads independently of candidate and results requests.
+  loadTurnstileScript();
+  if (!db) return;
+
+  await Promise.allSettled([
+    loadCandidates(),
+    loadResults()
+  ]);
 })();
 </script>
 </body>

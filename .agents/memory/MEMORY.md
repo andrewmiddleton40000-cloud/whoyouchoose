@@ -1,0 +1,1 @@
+- [Preview-generated Replit metadata](preview-generated-replit-metadata.md) — local preview setup may rewrite imported `.replit` modules and port mappings automatically.
