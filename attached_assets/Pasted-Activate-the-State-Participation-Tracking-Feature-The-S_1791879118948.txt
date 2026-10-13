@@ -1,0 +1,33 @@
+Activate the State Participation Tracking Feature
+The State Participation Tracking section is currently unavailable. Implement it as a fully functional feature rather than leaving it as a placeholder, disabled panel, or coming-soon message.
+Required functionality
+Display participation information for all 36 Nigerian states and the Federal Capital Territory (FCT).
+Show the participation count for each state, using the data actually collected by the website.
+Display the total participation count across all states and the FCT.
+Where reliable data is available, show each state's percentage contribution to total participation.
+Present the information using a clean, responsive table, state list, interactive map, or chart that matches the existing website design.
+Allow users to compare participation levels across states.
+Include appropriate loading indicators, empty states, and error messages.
+Refresh participation data when new valid records are received, using the existing backend and data-refresh approach.
+Ensure that the feature works on mobile and desktop screens.
+Data integration and accuracy
+First, inspect the existing backend, database, APIs, and participation-submission workflow to identify how participation is currently recorded.
+Then:
+Connect the tracking section to the actual source of participation data.
+Use the existing Supabase integration if that is the website's current database.
+Ensure state participation is recorded and aggregated consistently.
+Map state values to standardized Nigerian state names so spelling differences do not create duplicate state entries.
+Include the FCT as a separate administrative category.
+Handle missing or invalid state values without crashing the tracking feature.
+Prevent duplicate submissions from inflating counts where the existing system supports reliable duplicate prevention.
+Apply the appropriate database permissions and security policies.
+Never expose private voter information, personal details, authentication credentials, or confidential database records in public tracking results.
+Critical accuracy requirement: Do not fabricate participation figures, assign invented numbers to states, or present sample data as real participation. If the website has no existing participation records, display zero or an appropriate “No participation data available yet” message. Make it clear that zero recorded participation does not necessarily mean zero real-world participation.
+Participation metrics
+Where supported by the available data, display:
+Total recorded participation.
+Participation by state and FCT.
+Each state's percentage of total recorded participation.
+Highest and lowest recorded participation, clearly labelled.
+The time of the latest successful data refresh.
+Only calculate percentages and rankings from valid recorded data. If population-based or voter-registration-based participation rates are introduced later, use verified denominators and clearly label the metric.
